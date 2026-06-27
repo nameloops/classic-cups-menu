@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classic Cups – Admin</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --brown: #3E1F0A;
+    --brown-mid: #6B3A1F;
+    --amber: #D47C2A;
+    --cream: #FFF8F0;
+    --cream-border: #E8D0B0;
+    --text: #2C1A0E;
+    --muted: #7A5C3C;
+    --green: #2E7D32;
+    --green-bg: #E8F5E9;
+    --red: #C62828;
+    --red-bg: #FFEBEE;
+    --orange: #E65100;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F5EDE0; color: var(--text); min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { background: var(--brown); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30; gap: 10px; }
+  .topbar-left h1 { font-size: 1rem; font-weight: 700; }
+  .topbar-left p  { font-size: 0.7rem; opacity: 0.6; margin-top: 1px; }
+  .save-btn { background: var(--amber); color: #fff; border: none; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .save-btn:active { opacity: 0.85; }
+
+  /* STATS */
+  .stats { display: flex; gap: 8px; padding: 12px 14px; }
+  .stat { flex: 1; background: #fff; border-radius: 12px; border: 1px solid var(--cream-border); padding: 10px 8px; text-align: center; }
+  .stat-n { font-size: 1.5rem; font-weight: 800; }
+  .stat-n.avail-n  { color: var(--green); }
+  .stat-n.unavail-n { color: var(--red); }
+  .stat-n.total-n  { color: var(--brown-mid); }
+  .stat-l { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+  /* CONTROLS */
+  .controls { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .search-box { width: 100%; padding: 9px 14px; border: 1.5px solid var(--cream-border); border-radius: 10px; font-size: 0.85rem; background: #fff; color: var(--text); outline: none; }
+  .search-box:focus { border-color: var(--brown-mid); }
+  .bulk-row { display: flex; gap: 8px; }
+  .bulk-btn { flex: 1; background: #fff; border: 1px solid var(--cream-border); color: var(--text); font-size: 0.75rem; font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer; }
+  .bulk-btn:hover { background: var(--cream); }
+
+  /* MENU LINK */
+  .menu-link-box { margin: 0 14px 10px; background: #fff; border-radius: 10px; border: 1px solid var(--cream-border); padding: 10px 12px; }
+  .menu-link-box label { font-size: 0.72rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .menu-link-row { display: flex; gap: 6px; }
+  .menu-link-row input { flex: 1; padding: 7px 10px; border: 1px solid var(--cream-border); border-radius: 8px; font-size: 0.78rem; color: var(--text); background: var(--cream); outline: none; }
+  .menu-link-row button { background: var(--brown); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 0.75rem; cursor: pointer; font-weight: 600; }
+
+  /* SECTION */
+  .sec-head { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); padding: 10px 14px 5px; background: #F5EDE0; border-top: 1px solid var(--cream-border); margin-top: 6px; }
+
+  /* ITEM ROW */
+  .item-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border-bottom: 1px solid #F0E0D0; }
+  .item-row.unavailable { background: #FFF5F5; }
+  .item-emoji { font-size: 1.35rem; width: 34px; text-align: center; flex-shrink: 0; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 0.85rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-price { font-size: 0.72rem; color: var(--muted); }
+  .bs-badge { display: inline-block; background: #FFF3E0; color: var(--orange); font-size: 0.58rem; font-weight: 800; padding: 1px 5px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+
+  /* TOGGLE */
+  .tog-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .tog-label { font-size: 0.68rem; color: var(--muted); min-width: 36px; text-align: right; }
+  .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: #DDD0C0; border-radius: 22px; transition: .22s; }
+  .slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .22s; }
+  input:checked + .slider { background: var(--green); }
+  input:checked + .slider::before { transform: translateX(18px); }
+
+  /* IMAGE */
+  .img-thumb { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; border: 1px solid var(--cream-border); flex-shrink: 0; background: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--muted); overflow: hidden; cursor: pointer; }
+  .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .cam-btn { background: #F0E8DC; border: 1px solid var(--cream-border); color: var(--brown-mid); font-size: 0.68rem; padding: 4px 7px; border-radius: 6px; cursor: pointer; flex-shrink: 0; font-weight: 600; }
+  .cam-btn:hover { background: var(--cream); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--green); color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 99; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .hidden-file { display: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>☕ Classic Cups – Admin</h1>
+    <p>Toggle items on/off · Upload photos · Save</p>
+  </div>
+  <button class="save-btn" onclick="saveAll()">💾 Save Changes</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n avail-n"  id="nAvail">—</div><div class="stat-l">Available</div></div>
+  <div class="stat"><div class="stat-n unavail-n" id="nUnavail">—</div><div class="stat-l">Unavailable</div></div>
+  <div class="stat"><div class="stat-n total-n"  id="nTotal">—</div><div class="stat-l">Total Items</div></div>
+</div>
+
+<div class="controls">
+  <input class="search-box" id="searchInput" type="text" placeholder="Search items…" oninput="renderList()">
+  <div class="bulk-row">
+    <button class="bulk-btn" onclick="bulkSet(true)">✅ All Available</button>
+    <button class="bulk-btn" onclick="bulkSet(false)">❌ All Unavailable</button>
+  </div>
+</div>
+
+<div class="menu-link-box">
+  <label>Menu page URL (for QR code)</label>
+  <div class="menu-link-row">
+    <input type="text" id="menuUrl" placeholder="https://yourname.netlify.app/menu.html" value="">
+    <button onclick="openMenuUrl()">Open</button>
+  </div>
+</div>
+
+<div id="listContainer"></div>
+
+<input type="file" class="hidden-file" id="fileInput" accept="image/*">
+<div class="toast" id="toast">Changes saved!</div>
+
+<script>
+const AVAIL_KEY = 'classicCupsAvailability';
+const IMG_KEY   = 'classicCupsImages';
+const URL_KEY   = 'classicCupsMenuUrl';
+
+const MENU = [
+  {id:'cs',  name:'Chicken Samosa',            price:12,  cat:'Snacks',                        emoji:'🫓', bestseller:true},
+  {id:'as',  name:'Aloo Samosa',               price:15,  cat:'Snacks',                        emoji:'🫓'},
+  {id:'nf',  name:'Nuggets (with Fries)',       price:50,  cat:'Snacks',                        emoji:'🍗'},
+  {id:'cc',  name:'Chicken Cutlet',             price:15,  cat:'Snacks',                        emoji:'🍗'},
+  {id:'cw',  name:'Chicken Wings',              price:40,  cat:'Snacks',                        emoji:'🍗'},
+  {id:'ck',  name:'Chicken Stick',              price:50,  cat:'Snacks',                        emoji:'🍢'},
+  {id:'ffq', name:'French Fries (Quarter)',     price:30,  cat:'Snacks',                        emoji:'🍟'},
+  {id:'ffh', name:'French Fries (Half)',        price:50,  cat:'Snacks',                        emoji:'🍟'},
+  {id:'mg',  name:'Mangoda',                    price:20,  cat:'Snacks',                        emoji:'🟡'},
+  {id:'cp',  name:'Cauliflower Pakoda',         price:30,  cat:'Snacks',                        emoji:'🌿'},
+  {id:'km',  name:'Kaada Mutta Masala (Plate)', price:60,  cat:'Snacks',                        emoji:'🥚'},
+  {id:'eb',  name:'Egg Bajji',                  price:10,  cat:'Snacks',                        emoji:'🥚'},
+  {id:'ek',  name:'Egg Kizhi',                  price:15,  cat:'Snacks',                        emoji:'🥚'},
+  {id:'em',  name:'Egg Kanthari/Masala',        price:15,  cat:'Snacks',                        emoji:'🌶️'},
+  {id:'pp',  name:'Pazham Pori',                price:12,  cat:'Snacks',                        emoji:'🍌'},
+  {id:'un',  name:'Unnakkaya',                  price:20,  cat:'Snacks',                        emoji:'🍌'},
+  {id:'cmr', name:'Chicken Mini Roll',          price:20,  cat:'Snacks',                        emoji:'🌯'},
+  {id:'cpc', name:'Chatti Pathiri (Chicken)',   price:25,  cat:'Snacks',                        emoji:'🫓'},
+  {id:'cps', name:'Chatti Pathiri (Sweet)',     price:20,  cat:'Snacks',                        emoji:'🍯'},
+  {id:'ip',  name:'Irachi Pathiri',             price:30,  cat:'Snacks',                        emoji:'🫓'},
+  {id:'ci',  name:'Chicken Ilayada',            price:15,  cat:'Snacks',                        emoji:'🍃'},
+  {id:'bi',  name:'Banana Ilayada',             price:12,  cat:'Snacks',                        emoji:'🍃'},
+  {id:'kls', name:'Kallummakkaaya (Small)',     price:20,  cat:'Snacks',                        emoji:'🐚'},
+  {id:'kll', name:'Kallummakkaaya (Large)',     price:25,  cat:'Snacks',                        emoji:'🐚'},
+  {id:'ckm', name:'Chicken Kalmas',             price:15,  cat:'Snacks',                        emoji:'🍗'},
+  {id:'fk',  name:'Fish Kalmas',               price:20,  cat:'Snacks',                        emoji:'🐟'},
+  {id:'cb',  name:'Cheese Box',                price:40,  cat:'Snacks',                        emoji:'🧀'},
+  {id:'ia',  name:'Irachi Ada',                price:20,  cat:'Snacks',                        emoji:'🍃'},
+  {id:'bpz', name:'Bread Pizza',               price:30,  cat:'Snacks',                        emoji:'🍕'},
+  {id:'kb',  name:'Kappa Biriyani (Half)',      price:50,  cat:'Plated Dishes',                 emoji:'🍲'},
+  {id:'mo',  name:'Momos (5 Pieces)',           price:50,  cat:'Plated Dishes',                 emoji:'🥟'},
+  {id:'kn',  name:'Kunjipathal (Half)',         price:50,  cat:'Plated Dishes',                 emoji:'🍲'},
+  {id:'wp',  name:'White Sauce Pasta (Half)',   price:50,  cat:'Plated Dishes',                 emoji:'🍝'},
+  {id:'ep',  name:'Eenth Pidi',                price:75,  cat:'Plated Dishes',                 emoji:'🫙'},
+  {id:'pv',  name:'Palvazhakka',               price:40,  cat:'Plated Dishes',                 emoji:'🍈'},
+  {id:'ca',  name:'Chicken Aleesa',            price:50,  cat:'Plated Dishes',                 emoji:'🍛'},
+  {id:'pk',  name:'Paal Kappa with Beef',      price:80,  cat:'Plated Dishes',                 emoji:'🍛'},
+  {id:'ppb', name:'Pazham Pori with Beef',     price:70,  cat:'Plated Dishes',                 emoji:'🍌'},
+  {id:'fr',  name:'Loaded Fries – Regular',    price:140, cat:'Loaded Fries',                  emoji:'🍟'},
+  {id:'fs',  name:'Loaded Fries – Spicy',      price:180, cat:'Loaded Fries',                  emoji:'🌶️'},
+  {id:'cms', name:'Chicken Mayo Sandwich',     price:50,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🥪'},
+  {id:'cbp', name:'Chicken Bread Pocket',      price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🫓'},
+  {id:'csh', name:'Chicken Shavarma Roll',     price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🌯'},
+  {id:'bks', name:'Beef Keema Sandwich',       price:25,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🥪'},
+  {id:'czb', name:'Chicken Zinger Burger',     price:80,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🍔'},
+  {id:'mzb', name:'Mini Zinger Burger',        price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🍔'},
+  {id:'mt',  name:'Masala Tea',                price:20,  cat:'Drinks',                        emoji:'🍵', bestseller:true},
+  {id:'mkt', name:'Milk Tea',                  price:15,  cat:'Drinks',                        emoji:'🧋'},
+  {id:'mc',  name:'Milk Coffee',               price:20,  cat:'Drinks',                        emoji:'☕'},
+  {id:'gt',  name:'Ginger Tea',                price:20,  cat:'Drinks',                        emoji:'🍵'},
+  {id:'ct',  name:'Cardamom Tea',              price:20,  cat:'Drinks',                        emoji:'🍵'},
+  {id:'bst', name:'Boost',                     price:25,  cat:'Drinks',                        emoji:'🥛'},
+  {id:'hl',  name:'Horlicks',                  price:25,  cat:'Drinks',                        emoji:'🥛'},
+  {id:'bt',  name:'Black Tea',                 price:10,  cat:'Drinks',                        emoji:'🍵'},
+  {id:'lt',  name:'Lemon Tea',                 price:12,  cat:'Drinks',                        emoji:'🍋'},
+  {id:'mnt', name:'Mint Tea',                  price:12,  cat:'Drinks',                        emoji:'🌿'},
+  {id:'avm', name:'Avil Milk Regular',         price:40,  cat:'Drinks',                        emoji:'🥛'},
+  {id:'avs', name:'Avil Milk Special',         price:60,  cat:'Drinks',                        emoji:'🥛'},
+  {id:'oj',  name:'Orange Juice',              price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍊'},
+  {id:'pj',  name:'Pineapple Juice',           price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍍'},
+  {id:'smj', name:'Shamam Juice',              price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍈'},
+  {id:'wmj', name:'Water Melon Juice',         price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🍉'},
+  {id:'gj',  name:'Grape Juice',               price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍇'},
+  {id:'aj',  name:'Anar Juice',                price:60,  cat:'Fresh Juices & Sarbath',        emoji:'❤️'},
+  {id:'mj',  name:'Musambi Juice',             price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🟡'},
+  {id:'ns',  name:'Nannari Sarbath',           price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🌿'},
+  {id:'ss',  name:'Soda Sarbath',              price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
+  {id:'mks', name:'Milk Sarbath',              price:30,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
+  {id:'bm',  name:'Butter Milk (Moru)',        price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
+  {id:'msd', name:'Masala Soda',               price:15,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
+  {id:'mru', name:'Moru Soda',                 price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
+  {id:'ls',  name:'Lime Soda',                 price:15,  cat:'Fresh Juices & Sarbath',        emoji:'🍋'},
+  {id:'fl',  name:'Fresh Lime',                price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🍋'},
+  {id:'mnl', name:'Mint Lime',                 price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🌿'},
+  {id:'grl', name:'Grape Lime',                price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍇'},
+  {id:'pl',  name:'Pineapple Lime',            price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍍'},
+  {id:'wml', name:'Watermelon Lime',           price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍉'},
+  {id:'hnl', name:'Honey Lime',                price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🍯'},
+  {id:'lsi', name:'Lassi',                     price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
+  {id:'tcs', name:'Tender Coconut Shake',      price:60,  cat:'Shakes',                        emoji:'🥥'},
+  {id:'apsh',name:'Apple Shake',               price:60,  cat:'Shakes',                        emoji:'🍎'},
+  {id:'mnsh',name:'Mango Shake',               price:60,  cat:'Shakes',                        emoji:'🥭'},
+  {id:'ansh',name:'Anar Shake',                price:70,  cat:'Shakes',                        emoji:'❤️'},
+  {id:'pash',name:'Papaya Shake',              price:60,  cat:'Shakes',                        emoji:'🍈'},
+  {id:'avsh',name:'Avocado Shake',             price:80,  cat:'Shakes',                        emoji:'🥑'},
+  {id:'shsh',name:'Sharjah Shake',             price:60,  cat:'Shakes',                        emoji:'🥛'},
+  {id:'chsh',name:'Chikku Shake',              price:60,  cat:'Shakes',                        emoji:'🟤'},
+  {id:'bosh',name:'Boost Shake',               price:60,  cat:'Shakes',                        emoji:'🥛'},
+];
+
+let avail = {};
+let imgs  = {};
+let pendingId = null;
+
+function init() {
+  try { const v = localStorage.getItem(AVAIL_KEY); if (v) avail = JSON.parse(v); } catch(e){}
+  try { const v = localStorage.getItem(IMG_KEY);   if (v) imgs  = JSON.parse(v); } catch(e){}
+  try { const u = localStorage.getItem(URL_KEY);   if (u) document.getElementById('menuUrl').value = u; } catch(e){}
+  renderList();
+  updateStats();
+}
+
+function renderList() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const cats = [...new Set(MENU.map(i => i.cat))];
+  let html = '';
+  cats.forEach(cat => {
+    const items = MENU.filter(i => i.cat === cat && (!q || i.name.toLowerCase().includes(q)));
+    if (!items.length) return;
+    html += '<div class="sec-head">' + cat + '</div>';
+    items.forEach(item => {
+      const on = avail[item.id] !== false;
+      const imgSrc = imgs[item.id];
+      const thumbInner = imgSrc
+        ? '<img src="' + imgSrc + '" alt="">'
+        : 'IMG';
+      html += '<div class="item-row' + (!on ? ' unavailable' : '') + '" id="row-' + item.id + '">'
+            + '<div class="item-emoji">' + item.emoji + '</div>'
+            + '<div class="item-info">'
+            + '<div class="item-name">' + item.name + (item.bestseller ? '<span class="bs-badge">⭐ Best Seller</span>' : '') + '</div>'
+            + '<div class="item-price">₹' + item.price + '</div>'
+            + '</div>'
+            + '<label class="toggle"><input type="checkbox"' + (on ? ' checked' : '') + ' onchange="toggle(\'' + item.id + '\',this.checked)"><span class="slider"></span></label>'
+            + '<div class="img-thumb" onclick="pickImg(\'' + item.id + '\')">' + thumbInner + '</div>'
+            + '<button class="cam-btn" onclick="pickImg(\'' + item.id + '\')">📷</button>'
+            + '</div>';
+    });
+  });
+  document.getElementById('listContainer').innerHTML = html;
+}
+
+function toggle(id, on) {
+  avail[id] = on;
+  const row = document.getElementById('row-' + id);
+  if (row) row.className = 'item-row' + (!on ? ' unavailable' : '');
+  updateStats();
+}
+
+function updateStats() {
+  const total   = MENU.length;
+  const unavail = MENU.filter(i => avail[i.id] === false).length;
+  document.getElementById('nTotal').textContent   = total;
+  document.getElementById('nAvail').textContent   = total - unavail;
+  document.getElementById('nUnavail').textContent = unavail;
+}
+
+function bulkSet(on) {
+  MENU.forEach(i => { avail[i.id] = on; });
+  renderList();
+  updateStats();
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem(AVAIL_KEY, JSON.stringify(avail));
+    localStorage.setItem(IMG_KEY,   JSON.stringify(imgs));
+    const url = document.getElementById('menuUrl').value.trim();
+    if (url) localStorage.setItem(URL_KEY, url);
+    showToast('Changes saved!');
+  } catch(e) {
+    alert('Could not save – storage may be full (large images). Try clearing some images.');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function pickImg(id) {
+  pendingId = id;
+  const f = document.getElementById('fileInput');
+  f.value = '';
+  f.click();
+}
+
+function openMenuUrl() {
+  const url = document.getElementById('menuUrl').value.trim();
+  if (url) window.open(url, '_blank');
+  else alert('Enter the menu URL first.');
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file || !pendingId) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    imgs[pendingId] = ev.target.result;
+    renderList();
+    showToast('Photo updated – remember to Save!');
+  };
+  reader.readAsDataURL(file);
+});
+
+window.toggle   = toggle;
+window.bulkSet  = bulkSet;
+window.saveAll  = saveAll;
+window.pickImg  = pickImg;
+window.openMenuUrl = openMenuUrl;
+
+init();
+</script>
+</body>
+</html>
