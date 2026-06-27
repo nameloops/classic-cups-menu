@@ -8,14 +8,7 @@ QR menu
 
 ---
 
-## Step 1 – Put the menu online (Netlify – easiest, free)
-
-1. Open https://app.netlify.com/drop in your browser
-2. Drag the entire "classic-cups" folder onto the page
-3. Wait ~10 seconds — you get a link like: https://amazing-name-123.netlify.app
-4. Your menu is now live at: https://amazing-name-123.netlify.app/menu.html
-
----
+## Step 1 – Put the menu online 
 
 ## Step 2 – Generate the QR code
 
