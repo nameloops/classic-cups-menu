@@ -159,6 +159,35 @@ input:checked + .slider::before { transform:translateX(17px); }
 .modal-save-btn { flex:1; background:var(--brown); color:#fff; border:none; padding:12px; border-radius:10px; font-size:.88rem; font-weight:700; cursor:pointer; }
 .modal-cancel-btn { background:#fff; color:var(--muted); border:1.5px solid var(--cb); padding:12px 18px; border-radius:10px; font-size:.88rem; font-weight:600; cursor:pointer; }
 
+/* ── GITHUB NOTICE ── */
+.gh-notice { margin:10px 12px; background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:10px; padding:10px 12px; display:flex; gap:8px; align-items:flex-start; }
+.gh-notice-icon { font-size:1.2rem; flex-shrink:0; margin-top:1px; }
+.gh-notice-text { font-size:.75rem; color:#1E40AF; line-height:1.6; }
+.gh-notice-text strong { font-weight:700; display:block; margin-bottom:2px; }
+
+/* ── GITHUB UPLOAD SECTION ── */
+.gh-section { background:#fff; border-radius:10px; border:1px solid var(--cb); margin-bottom:12px; overflow:hidden; }
+.gh-section-head { background:#1D4ED8; color:#fff; padding:10px 14px; font-size:.8rem; font-weight:700; display:flex; align-items:center; gap:6px; }
+.gh-item-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid #F0E0D0; }
+.gh-item-row:last-child { border-bottom:none; }
+.gh-item-thumb { width:36px; height:36px; border-radius:7px; object-fit:cover; border:1px solid var(--cb); flex-shrink:0; background:var(--cream); display:flex; align-items:center; justify-content:center; font-size:1.1rem; overflow:hidden; }
+.gh-item-thumb img { width:100%; height:100%; object-fit:cover; }
+.gh-item-info { flex:1; min-width:0; }
+.gh-item-name { font-size:.8rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gh-item-file { font-size:.65rem; color:#1D4ED8; font-family:monospace; background:#EFF6FF; padding:2px 6px; border-radius:4px; margin-top:2px; display:inline-block; }
+.gh-copy-btn { background:#EFF6FF; border:1px solid #BFDBFE; color:#1D4ED8; font-size:.68rem; font-weight:700; padding:5px 8px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.gh-copy-btn:hover { background:#DBEAFE; }
+.gh-copy-btn.copied { background:#D1FAE5; border-color:#6EE7B7; color:#065F46; }
+.gh-steps { background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:12px; margin-bottom:12px; }
+.gh-steps-title { font-size:.75rem; font-weight:700; color:#065F46; margin-bottom:8px; }
+.gh-step { display:flex; gap:8px; margin-bottom:7px; font-size:.73rem; color:#064E3B; line-height:1.5; }
+.gh-step:last-child { margin-bottom:0; }
+.gh-step-num { background:#059669; color:#fff; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:800; flex-shrink:0; margin-top:1px; }
+.gh-link-btn { display:block; width:100%; background:#1D4ED8; color:#fff; border:none; padding:11px; border-radius:10px; font-size:.82rem; font-weight:700; cursor:pointer; text-align:center; margin-top:10px; text-decoration:none; }
+.gh-link-btn:hover { background:#1E40AF; }
+.gh-search-box { width:100%; padding:8px 12px; border:1.5px solid var(--cb); border-radius:8px; font-size:.82rem; background:#fff; color:var(--text); outline:none; margin-bottom:8px; }
+.gh-search-box:focus { border-color:#1D4ED8; }
+
 /* ── EMPTY STATE ── */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 .empty-state .e-icon { font-size:2.5rem; margin-bottom:.8rem; }
@@ -201,6 +230,15 @@ input:checked + .slider::before { transform:translateX(17px); }
   <div class="stat"><div class="stat-n t" id="nTotal">—</div><div class="stat-l">Total</div></div>
 </div>
 
+<!-- GITHUB REMINDER NOTICE -->
+<div class="gh-notice">
+  <div class="gh-notice-icon">📌</div>
+  <div class="gh-notice-text">
+    <strong>To update item photos, upload to GitHub</strong>
+    Photos added here are saved on this device only. To show updated photos to all customers, upload new images to the <code style="background:#DBEAFE;padding:1px 4px;border-radius:3px;font-size:.72rem;">images/</code> folder in your GitHub repository. Go to <strong>⚙️ Settings → Upload to GitHub</strong> for step-by-step instructions.
+  </div>
+</div>
+
 <!-- TABS -->
 <div class="tabs">
   <button class="tab active" id="tab-menu"      onclick="switchTab('menu')">📋 Active Menu</button>
@@ -235,6 +273,8 @@ input:checked + .slider::before { transform:translateX(17px); }
 <!-- ═══ SETTINGS TAB ═══ -->
 <div id="pane-settings" style="display:none">
   <div style="padding:12px">
+
+    <!-- Menu URL -->
     <div class="url-box" style="margin:0 0 12px">
       <label>Menu Page URL (for QR code)</label>
       <div class="url-row">
@@ -242,6 +282,30 @@ input:checked + .slider::before { transform:translateX(17px); }
         <button onclick="openMenuUrl()">Open</button>
       </div>
     </div>
+
+    <!-- ── UPLOAD TO GITHUB SECTION ── -->
+    <div style="font-size:.8rem;font-weight:800;color:var(--brown);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📁 Upload to GitHub</div>
+
+    <!-- Step by step guide -->
+    <div class="gh-steps">
+      <div class="gh-steps-title">🟢 How to update item photos (visible to all customers)</div>
+      <div class="gh-step"><div class="gh-step-num">1</div><div>Take or save the new photo on your phone/computer</div></div>
+      <div class="gh-step"><div class="gh-step-num">2</div><div>Rename the file to the exact filename shown below (e.g. <code style="background:#D1FAE5;padding:1px 4px;border-radius:3px;">masala_tea.jpg</code>)</div></div>
+      <div class="gh-step"><div class="gh-step-num">3</div><div>Go to your GitHub repository → click the <strong>images/</strong> folder</div></div>
+      <div class="gh-step"><div class="gh-step-num">4</div><div>Click <strong>"Add file" → "Upload files"</strong> → drag your renamed photo → click <strong>"Commit changes"</strong></div></div>
+      <div class="gh-step"><div class="gh-step-num">5</div><div>Done! The menu updates instantly for all customers 🎉</div></div>
+      <a class="gh-link-btn" id="ghRepoLink" href="#" target="_blank" onclick="openGHRepo()">🔗 Open GitHub Repository</a>
+    </div>
+
+    <!-- Image filename reference -->
+    <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Item → Filename Reference</div>
+    <input class="gh-search-box" type="text" placeholder="Search items…" oninput="renderGHList(this.value)">
+    <div class="gh-section">
+      <div class="gh-section-head">📷 Item Image Filenames <span style="font-size:.65rem;opacity:.7;font-weight:400;">(tap filename to copy)</span></div>
+      <div id="ghItemList"></div>
+    </div>
+
+    <!-- Danger Zone -->
     <div style="background:#fff;border-radius:10px;border:1px solid var(--cb);padding:12px;margin-bottom:12px;">
       <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Danger Zone</div>
       <button onclick="clearWithdrawn()" style="width:100%;background:#FEE2E2;color:var(--red);border:1px solid #FECACA;padding:10px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;margin-bottom:6px;">🗑 Delete All Withdrawn Items</button>
@@ -467,6 +531,8 @@ function getActiveMenu() {
   return [...base,...added].filter(i=>!withdrawn.has(i.id));
 }
 
+function getFullMenu() { return getActiveMenu(); }
+
 function getWithdrawnItems() {
   const all = [...DEFAULT_MENU, ...customItems.filter(c=>!DEFAULT_MENU.find(d=>d.id===c.id))];
   const seen = new Set();
@@ -597,6 +663,7 @@ function switchTab(tab) {
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
     document.getElementById('pane-'+t).style.display = t===tab?'block':'none';
   });
+  if (tab === 'settings') renderGHList();
 }
 
 /* ══════════════════════════════════════
@@ -861,6 +928,91 @@ document.getElementById('modalBg').addEventListener('click',function(e){
 });
 
 /* ══════════════════════════════════════
+   GITHUB IMAGE REFERENCE
+══════════════════════════════════════ */
+const GITHUB_IMAGES = {
+  'cs':'chicken_samosa.jpg','as':'aloo_samosa.jpg','nf':'nuggets_fries.jpg',
+  'cc':'chicken_cutlet.jpg','cw':'wings.jpg','ck':'stick.jpg',
+  'ffq':'fries2.jpg','ffh':'Fries.jpg','mg':'mangoda.jpg',
+  'cp':'cauliflower_pakoda.jpg','km':'kadamutta.jpg','eb':'egg_baji.jpg',
+  'ek':'egg_kizhi.jpg','em':'kanthari_mutta.jpg','pp':'pazhampori.jpg',
+  'un':'unnakaya.jpg','cmr':'mini_roll.jpg','cpc':'chicken_chattipathiri.jpg',
+  'cps':'sweet_chattipathiri.png','ip':'irachi_pathiri.jpg',
+  'ci':'Ilayada.jpg','bi':'Ilayada2.jpg','kls':'kallummakkaya_small.jpg',
+  'kll':'kallummakkaya_big.jpg','ckm':'chicken_kalmas.jpg','fk':'green_kalmas.jpg',
+  'cb':'cheesebox.jpg','ia':'irachi_ada.png','bpz':'bread_pizza.jpg',
+  'kb':'kappa_biriyani.jpg','mo':'momos.jpg','kn':'kunjipathal.jpg',
+  'wp':'white_sauce_pasta.jpg','ep':'eenth.jpg','pv':'palvazhakka.jpg',
+  'ca':'Aleesa.jpg','pk':'palkappa_beef.jpg','ppb':'pazhapori_beef.jpg',
+  'fr':'loadwedfries.jpg','fs':'loadedfries_spicy.jpg',
+  'cms':'chicken_mayo_sandwich.jpg','cbp':'bread_pocket.jpg',
+  'csh':'shawarma_roll.jpg','bks':'keema_sandwich.jpg',
+  'czb':'zinger_burger.jpg','mzb':'chicken_zinger_mini_burger.jpg',
+  'mt':'masala_tea.jpg','mkt':'milk_tea.jpg','mc':'milk_coffee.jpg',
+  'gt':'ginger_tea.jpg','ct':'cardamom_tea.jpg','bst':'boost.jpg',
+  'hl':'horlicks.jpg','bt':'black_tea.jpg','lt':'lemon_tea.jpg',
+  'mnt':'mint_tea.jpg','avm':'avil_milk.jpg','avs':'avil_milk_special.jpg',
+  'oj':'orange_juice.jpg','pj':'pineapple_juice.jpg','smj':'shamam_juice.jpg',
+  'wmj':'water_melon_juice.jpg','gj':'grape_juice.jpg','aj':'anar_juice.jpg',
+  'mj':'musambi_juice.jpg','ns':'nannari.jpg','ss':'soda_sarbath.jpg',
+  'mks':'milk_sarbath.jpg','bm':'butter_milk.jpg','msd':'masala_soda.jpg',
+  'mru':'moru_soda.jpg','ls':'lime_soda.jpg','fl':'fresh_lime.jpg',
+  'mnl':'mint_lime.jpg','grl':'grape_lime.jpg','pl':'pineapple_lime.jpg',
+  'wml':'watermelon_lime.jpg','hnl':'honey_lime.jpg','lsi':'lassi.jpg',
+  'tcs':'tender_coconut_shake.jpg','apsh':'apple_shake.jpg','mnsh':'mango_shake.jpg',
+  'ansh':'anar_shake.jpg','pash':'papaya_shake.jpg','avsh':'avocado_shake.jpg',
+  'shsh':'sharja_shake.jpg','chsh':'chikku_shake.jpg','bosh':'boost_shake.jpg',
+};
+
+function renderGHList(q='') {
+  const fullMenu = getFullMenu();
+  q = q.toLowerCase().trim();
+  const items = fullMenu.filter(i => !q || i.name.toLowerCase().includes(q));
+  const url = localStorage.getItem(K_URL) || '';
+  const repoBase = url ? url.replace('/menu.html','').replace(/\/$/, '') : 'https://yourusername.github.io/classic-cups-menu';
+
+  if (!items.length) {
+    document.getElementById('ghItemList').innerHTML = '<div style="padding:14px;text-align:center;color:var(--muted);font-size:.8rem;">No items found</div>';
+    return;
+  }
+
+  let html = '';
+  items.forEach(item => {
+    const filename = GITHUB_IMAGES[item.id] || null;
+    const githubUrl = filename ? repoBase + '/images/' + filename : null;
+    const thumbHtml = githubUrl
+      ? `<div class="gh-item-thumb"><img src="${githubUrl}" alt="" onerror="this.parentElement.innerHTML='${esc(item.emoji||'🍽️')}'"></div>`
+      : `<div class="gh-item-thumb">${esc(item.emoji||'🍽️')}</div>`;
+    const fileHtml = filename
+      ? `<div class="gh-item-file">${filename}</div>`
+      : `<div style="font-size:.65rem;color:var(--muted);margin-top:2px;">No image mapped</div>`;
+    const copyBtn = filename
+      ? `<button class="gh-copy-btn" id="cpbtn-${item.id}" onclick="copyFilename('${filename}','${item.id}')">📋 Copy</button>`
+      : '';
+    html += `<div class="gh-item-row">${thumbHtml}<div class="gh-item-info"><div class="gh-item-name">${esc(item.name)}</div>${fileHtml}</div>${copyBtn}</div>`;
+  });
+  document.getElementById('ghItemList').innerHTML = html;
+}
+
+function copyFilename(filename, id) {
+  navigator.clipboard.writeText(filename).then(() => {
+    const btn = document.getElementById('cpbtn-' + id);
+    if (btn) { btn.textContent = '✅ Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000); }
+  }).catch(() => {
+    prompt('Copy this filename:', filename);
+  });
+}
+
+function openGHRepo() {
+  const url = localStorage.getItem(K_URL) || '';
+  const repoUrl = url
+    ? 'https://github.com/' + url.replace('https://','').split('.github.io')[0] + '/' + url.split('.github.io/')[1]?.split('/')[0]
+    : 'https://github.com';
+  window.open(repoUrl, '_blank');
+  return false;
+}
+
+/* ══════════════════════════════════════
    EXPOSE & START
 ══════════════════════════════════════ */
 window.unlock=unlock; window.switchTab=switchTab;
@@ -873,7 +1025,8 @@ window.pickImg=pickImg; window.removeImg=removeImg;
 window.openAddModal=openAddModal; window.openEditModal=openEditModal;
 window.closeModal=closeModal; window.saveModal=saveModal;
 window.openMenuUrl=openMenuUrl; window.clearWithdrawn=clearWithdrawn;
-window.resetAll=resetAll;
+window.resetAll=resetAll; window.renderGHList=renderGHList;
+window.copyFilename=copyFilename; window.openGHRepo=openGHRepo;
 
 init();
 </script>
