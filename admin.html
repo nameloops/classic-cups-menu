@@ -5,333 +5,875 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classic Cups – Admin</title>
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --brown: #3E1F0A;
-    --brown-mid: #6B3A1F;
-    --amber: #D47C2A;
-    --cream: #FFF8F0;
-    --cream-border: #E8D0B0;
-    --text: #2C1A0E;
-    --muted: #7A5C3C;
-    --green: #2E7D32;
-    --green-bg: #E8F5E9;
-    --red: #C62828;
-    --red-bg: #FFEBEE;
-    --orange: #E65100;
-  }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F5EDE0; color: var(--text); min-height: 100vh; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --brown:     #3E1F0A;
+  --brown-mid: #6B3A1F;
+  --amber:     #D47C2A;
+  --cream:     #FFF8F0;
+  --cb:        #E8D0B0;
+  --text:      #2C1A0E;
+  --muted:     #7A5C3C;
+  --green:     #2E7D32;
+  --red:       #C62828;
+  --orange:    #E65100;
+  --star:      #F59E0B;
+  --grey:      #78716C;
+}
+body { font-family:'Segoe UI',system-ui,sans-serif; background:#F5EDE0; color:var(--text); min-height:100vh; }
 
-  /* TOP BAR */
-  .topbar { background: var(--brown); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30; gap: 10px; }
-  .topbar-left h1 { font-size: 1rem; font-weight: 700; }
-  .topbar-left p  { font-size: 0.7rem; opacity: 0.6; margin-top: 1px; }
-  .save-btn { background: var(--amber); color: #fff; border: none; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  .save-btn:active { opacity: 0.85; }
+/* ── LOCK ── */
+.lock { position:fixed; inset:0; background:var(--brown); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; padding:2rem; }
+.lock-icon  { font-size:3rem; margin-bottom:.8rem; }
+.lock-title { color:#fff; font-size:1.4rem; font-weight:800; }
+.lock-sub   { color:rgba(255,255,255,.45); font-size:.75rem; letter-spacing:2px; text-transform:uppercase; margin:.4rem 0 2rem; }
+.lock-inp   { width:100%; max-width:280px; padding:13px 16px; border-radius:12px; border:2px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); color:#fff; font-size:1rem; text-align:center; letter-spacing:2px; outline:none; }
+.lock-inp:focus { border-color:var(--amber); }
+.lock-btn   { margin-top:12px; width:100%; max-width:280px; padding:13px; background:var(--amber); color:#fff; border:none; border-radius:12px; font-size:.95rem; font-weight:700; cursor:pointer; }
+.lock-err   { margin-top:10px; color:#FF6B6B; font-size:.8rem; display:none; }
+.lock-err.show { display:block; }
+.lock.hidden { display:none; }
 
-  /* STATS */
-  .stats { display: flex; gap: 8px; padding: 12px 14px; }
-  .stat { flex: 1; background: #fff; border-radius: 12px; border: 1px solid var(--cream-border); padding: 10px 8px; text-align: center; }
-  .stat-n { font-size: 1.5rem; font-weight: 800; }
-  .stat-n.avail-n  { color: var(--green); }
-  .stat-n.unavail-n { color: var(--red); }
-  .stat-n.total-n  { color: var(--brown-mid); }
-  .stat-l { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+/* ── TOP BAR ── */
+.topbar { background:var(--brown); color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:30; gap:8px; }
+.topbar h1  { font-size:.95rem; font-weight:700; }
+.topbar p   { font-size:.65rem; opacity:.55; margin-top:1px; }
+.save-btn   { background:var(--amber); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:.8rem; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
 
-  /* CONTROLS */
-  .controls { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 8px; }
-  .search-box { width: 100%; padding: 9px 14px; border: 1.5px solid var(--cream-border); border-radius: 10px; font-size: 0.85rem; background: #fff; color: var(--text); outline: none; }
-  .search-box:focus { border-color: var(--brown-mid); }
-  .bulk-row { display: flex; gap: 8px; }
-  .bulk-btn { flex: 1; background: #fff; border: 1px solid var(--cream-border); color: var(--text); font-size: 0.75rem; font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer; }
-  .bulk-btn:hover { background: var(--cream); }
+/* ── STATS ── */
+.stats { display:flex; gap:6px; padding:10px 12px; flex-wrap:wrap; }
+.stat  { flex:1; min-width:60px; background:#fff; border-radius:10px; border:1px solid var(--cb); padding:8px 6px; text-align:center; }
+.stat-n { font-size:1.3rem; font-weight:800; }
+.stat-n.g { color:var(--green); }
+.stat-n.r { color:var(--red); }
+.stat-n.s { color:var(--star); }
+.stat-n.w { color:var(--grey); }
+.stat-n.t { color:var(--brown-mid); }
+.stat-l { font-size:.58rem; color:var(--muted); margin-top:1px; }
 
-  /* MENU LINK */
-  .menu-link-box { margin: 0 14px 10px; background: #fff; border-radius: 10px; border: 1px solid var(--cream-border); padding: 10px 12px; }
-  .menu-link-box label { font-size: 0.72rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .menu-link-row { display: flex; gap: 6px; }
-  .menu-link-row input { flex: 1; padding: 7px 10px; border: 1px solid var(--cream-border); border-radius: 8px; font-size: 0.78rem; color: var(--text); background: var(--cream); outline: none; }
-  .menu-link-row button { background: var(--brown); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 0.75rem; cursor: pointer; font-weight: 600; }
+/* ── TABS ── */
+.tabs { display:flex; border-bottom:2px solid var(--cb); background:#fff; position:sticky; top:57px; z-index:20; }
+.tab  { flex:1; padding:10px 4px; font-size:.78rem; font-weight:700; color:var(--muted); border:none; background:none; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all .15s; }
+.tab.active { color:var(--brown); border-bottom-color:var(--amber); }
 
-  /* SECTION */
-  .sec-head { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); padding: 10px 14px 5px; background: #F5EDE0; border-top: 1px solid var(--cream-border); margin-top: 6px; }
+/* ── CONTROLS ── */
+.controls { padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+.search-box { width:100%; padding:9px 14px; border:1.5px solid var(--cb); border-radius:10px; font-size:.85rem; background:#fff; color:var(--text); outline:none; }
+.search-box:focus { border-color:var(--brown-mid); }
+.bulk-row { display:flex; gap:6px; }
+.bulk-btn { flex:1; background:#fff; border:1px solid var(--cb); color:var(--text); font-size:.7rem; font-weight:600; padding:7px 4px; border-radius:8px; cursor:pointer; }
+.bulk-btn:hover { background:var(--cream); }
 
-  /* ITEM ROW */
-  .item-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border-bottom: 1px solid #F0E0D0; }
-  .item-row.unavailable { background: #FFF5F5; }
-  .item-emoji { font-size: 1.35rem; width: 34px; text-align: center; flex-shrink: 0; }
-  .item-info { flex: 1; min-width: 0; }
-  .item-name { font-size: 0.85rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .item-price { font-size: 0.72rem; color: var(--muted); }
-  .bs-badge { display: inline-block; background: #FFF3E0; color: var(--orange); font-size: 0.58rem; font-weight: 800; padding: 1px 5px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+/* ── MENU LINK ── */
+.url-box { margin:0 12px 10px; background:#fff; border-radius:10px; border:1px solid var(--cb); padding:10px 12px; }
+.url-box label { font-size:.68rem; font-weight:700; color:var(--muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+.url-row { display:flex; gap:6px; }
+.url-row input { flex:1; padding:7px 10px; border:1px solid var(--cb); border-radius:8px; font-size:.75rem; color:var(--text); background:var(--cream); outline:none; }
+.url-row button { background:var(--brown); color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:.72rem; cursor:pointer; font-weight:600; }
 
-  /* TOGGLE */
-  .tog-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-  .tog-label { font-size: 0.68rem; color: var(--muted); min-width: 36px; text-align: right; }
-  .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
-  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-  .slider { position: absolute; cursor: pointer; inset: 0; background: #DDD0C0; border-radius: 22px; transition: .22s; }
-  .slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .22s; }
-  input:checked + .slider { background: var(--green); }
-  input:checked + .slider::before { transform: translateX(18px); }
+/* ── ADD ITEM BTN ── */
+.add-item-bar { padding:10px 12px; }
+.add-item-btn { width:100%; padding:12px; background:var(--brown); color:#fff; border:none; border-radius:12px; font-size:.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.add-item-btn:hover { background:var(--brown-mid); }
 
-  /* IMAGE */
-  .img-thumb { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; border: 1px solid var(--cream-border); flex-shrink: 0; background: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--muted); overflow: hidden; cursor: pointer; }
-  .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .cam-btn { background: #F0E8DC; border: 1px solid var(--cream-border); color: var(--brown-mid); font-size: 0.68rem; padding: 4px 7px; border-radius: 6px; cursor: pointer; flex-shrink: 0; font-weight: 600; }
-  .cam-btn:hover { background: var(--cream); }
+/* ── SECTION HEAD ── */
+.sec-head { font-size:.68rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber); padding:10px 12px 4px; background:#F5EDE0; border-top:1px solid var(--cb); margin-top:4px; display:flex; align-items:center; justify-content:space-between; }
+.sec-count { font-size:.65rem; color:var(--muted); font-weight:600; letter-spacing:0; text-transform:none; }
 
-  /* TOAST */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--green); color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 99; pointer-events: none; white-space: nowrap; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ── ITEM CARD ── */
+.item-card { background:#fff; border-bottom:1px solid #F0E0D0; }
+.item-card.unavailable { background:#FFF5F5; }
+.item-card.is-bs { border-left:3px solid var(--star); }
+.item-card.withdrawn-card { background:#F5F5F4; border-left:3px solid var(--grey); }
 
-  .hidden-file { display: none; }
+/* ── ITEM MAIN ROW ── */
+.item-main { display:flex; align-items:center; gap:8px; padding:10px 12px; }
+.item-emoji { font-size:1.3rem; width:32px; text-align:center; flex-shrink:0; }
+.item-info  { flex:1; min-width:0; }
+.item-name  { font-size:.84rem; font-weight:600; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item-meta  { display:flex; align-items:center; gap:5px; margin-top:2px; flex-wrap:wrap; }
+.item-price { font-size:.7rem; color:var(--muted); }
+.bs-badge   { background:#FEF3C7; color:#92400E; font-size:.58rem; font-weight:800; padding:1px 5px; border-radius:6px; }
+.wd-badge   { background:#E5E7EB; color:var(--grey); font-size:.58rem; font-weight:800; padding:1px 5px; border-radius:6px; }
+.desc-prev  { font-size:.66rem; color:var(--muted); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; }
+
+/* ── ITEM CONTROLS ── */
+.item-ctrls { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+
+/* ── TOGGLE ── */
+.toggle { position:relative; width:38px; height:21px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.slider { position:absolute; cursor:pointer; inset:0; background:#DDD0C0; border-radius:21px; transition:.2s; }
+.slider::before { content:''; position:absolute; height:15px; width:15px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
+input:checked + .slider { background:var(--green); }
+input:checked + .slider::before { transform:translateX(17px); }
+
+/* ── ICON BUTTONS ── */
+.icon-btn { background:none; border:1.5px solid var(--cb); border-radius:6px; width:28px; height:28px; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+.icon-btn:hover { background:var(--cream); }
+.icon-btn.star-on  { background:#FEF3C7; border-color:var(--star); }
+.icon-btn.red-btn  { border-color:#FECACA; }
+.icon-btn.red-btn:hover { background:#FEE2E2; }
+.img-thumb-sm { width:28px; height:28px; border-radius:5px; border:1px solid var(--cb); flex-shrink:0; background:var(--cream); display:flex; align-items:center; justify-content:center; font-size:.55rem; color:var(--muted); overflow:hidden; cursor:pointer; }
+.img-thumb-sm img { width:100%; height:100%; object-fit:cover; }
+
+/* ── EDIT PANEL ── */
+.edit-panel { display:none; padding:10px 12px 14px; background:#FFF8F0; border-top:1px dashed var(--cb); }
+.edit-panel.open { display:block; }
+.ep-label { font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; margin-top:10px; }
+.ep-label:first-child { margin-top:0; }
+.ep-input { width:100%; padding:8px 10px; border:1.5px solid var(--cb); border-radius:8px; font-size:.82rem; font-family:inherit; color:var(--text); background:#fff; outline:none; }
+.ep-input:focus { border-color:var(--amber); }
+.ep-row { display:flex; gap:8px; align-items:flex-start; margin-top:10px; }
+.ep-half { flex:1; }
+.img-up-btn { width:100%; background:#fff; border:1.5px dashed var(--cb); color:var(--brown-mid); font-size:.75rem; font-weight:600; padding:9px; border-radius:8px; cursor:pointer; text-align:center; }
+.img-up-btn:hover { background:var(--cream); border-color:var(--amber); }
+.img-prev-wrap { position:relative; width:56px; height:56px; flex-shrink:0; }
+.img-prev-wrap img { width:56px; height:56px; border-radius:7px; object-fit:cover; border:1px solid var(--cb); }
+.img-rm-btn { position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff; border:none; border-radius:50%; width:17px; height:17px; font-size:.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; }
+.desc-char { font-size:.62rem; color:var(--muted); text-align:right; margin-top:2px; }
+.ep-action-row { display:flex; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--cb); }
+.ep-withdraw-btn { flex:1; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:8px; border-radius:8px; font-size:.75rem; font-weight:700; cursor:pointer; }
+.ep-delete-btn   { flex:1; background:#FEE2E2; color:var(--red); border:1px solid #FECACA; padding:8px; border-radius:8px; font-size:.75rem; font-weight:700; cursor:pointer; }
+.ep-withdraw-btn:hover { background:#FDE68A; }
+.ep-delete-btn:hover   { background:#FECACA; }
+
+/* ── WITHDRAWN TAB ── */
+.wd-info { margin:10px 12px; background:#fff; border:1px solid var(--cb); border-radius:10px; padding:10px 12px; font-size:.78rem; color:var(--muted); line-height:1.6; }
+.restore-btn { background:#E8F5E9; color:var(--green); border:1px solid #A5D6A7; padding:5px 10px; border-radius:8px; font-size:.72rem; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.restore-btn:hover { background:#C8E6C9; }
+
+/* ── MODAL ── */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100; display:flex; align-items:flex-end; justify-content:center; }
+.modal-bg.hidden { display:none; }
+.modal { background:#fff; border-radius:20px 20px 0 0; padding:1.5rem 1.2rem 2rem; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; }
+.modal-title { font-size:1rem; font-weight:800; color:var(--brown); margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; }
+.modal-close { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); }
+.modal label { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; margin-top:12px; }
+.modal label:first-of-type { margin-top:0; }
+.modal input, .modal select, .modal textarea { width:100%; padding:9px 12px; border:1.5px solid var(--cb); border-radius:9px; font-size:.85rem; font-family:inherit; color:var(--text); background:#fff; outline:none; }
+.modal input:focus, .modal select:focus, .modal textarea:focus { border-color:var(--amber); }
+.modal-row { display:flex; gap:10px; }
+.modal-row > div { flex:1; }
+.modal-footer { display:flex; gap:8px; margin-top:1.2rem; }
+.modal-save-btn { flex:1; background:var(--brown); color:#fff; border:none; padding:12px; border-radius:10px; font-size:.88rem; font-weight:700; cursor:pointer; }
+.modal-cancel-btn { background:#fff; color:var(--muted); border:1.5px solid var(--cb); padding:12px 18px; border-radius:10px; font-size:.88rem; font-weight:600; cursor:pointer; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+.empty-state .e-icon { font-size:2.5rem; margin-bottom:.8rem; }
+.empty-state p { font-size:.85rem; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--green); color:#fff; padding:10px 22px; border-radius:20px; font-size:.8rem; font-weight:600; opacity:0; transition:all .3s; z-index:200; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+.hidden-file { display:none; }
 </style>
 </head>
 <body>
 
+<!-- LOCK -->
+<div class="lock" id="lockScreen">
+  <div class="lock-icon">☕🔒</div>
+  <div class="lock-title">Classic Cups Admin</div>
+  <div class="lock-sub">Staff Access Only</div>
+  <input class="lock-inp" type="password" id="pwInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlock()">
+  <button class="lock-btn" onclick="unlock()">Unlock</button>
+  <div class="lock-err" id="lockErr">Incorrect password. Try again.</div>
+</div>
+
+<!-- TOP BAR -->
 <div class="topbar">
-  <div class="topbar-left">
+  <div>
     <h1>☕ Classic Cups – Admin</h1>
-    <p>Toggle items on/off · Upload photos · Save</p>
+    <p>Manage menu · availability · photos · best sellers</p>
   </div>
-  <button class="save-btn" onclick="saveAll()">💾 Save Changes</button>
+  <button class="save-btn" onclick="saveAll()">💾 Save</button>
 </div>
 
+<!-- STATS -->
 <div class="stats">
-  <div class="stat"><div class="stat-n avail-n"  id="nAvail">—</div><div class="stat-l">Available</div></div>
-  <div class="stat"><div class="stat-n unavail-n" id="nUnavail">—</div><div class="stat-l">Unavailable</div></div>
-  <div class="stat"><div class="stat-n total-n"  id="nTotal">—</div><div class="stat-l">Total Items</div></div>
+  <div class="stat"><div class="stat-n g" id="nAvail">—</div><div class="stat-l">Available</div></div>
+  <div class="stat"><div class="stat-n r" id="nUnavail">—</div><div class="stat-l">Unavailable</div></div>
+  <div class="stat"><div class="stat-n s" id="nBS">—</div><div class="stat-l">Best Sellers</div></div>
+  <div class="stat"><div class="stat-n w" id="nWD">—</div><div class="stat-l">Withdrawn</div></div>
+  <div class="stat"><div class="stat-n t" id="nTotal">—</div><div class="stat-l">Total</div></div>
 </div>
 
-<div class="controls">
-  <input class="search-box" id="searchInput" type="text" placeholder="Search items…" oninput="renderList()">
-  <div class="bulk-row">
-    <button class="bulk-btn" onclick="bulkSet(true)">✅ All Available</button>
-    <button class="bulk-btn" onclick="bulkSet(false)">❌ All Unavailable</button>
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" id="tab-menu"      onclick="switchTab('menu')">📋 Active Menu</button>
+  <button class="tab"        id="tab-withdrawn"  onclick="switchTab('withdrawn')">📦 Withdrawn</button>
+  <button class="tab"        id="tab-settings"   onclick="switchTab('settings')">⚙️ Settings</button>
+</div>
+
+<!-- ═══ ACTIVE MENU TAB ═══ -->
+<div id="pane-menu">
+  <div class="controls">
+    <input class="search-box" id="searchInput" type="text" placeholder="Search items…" oninput="renderActive()">
+    <div class="bulk-row">
+      <button class="bulk-btn" onclick="bulkSet(true)">✅ All Available</button>
+      <button class="bulk-btn" onclick="bulkSet(false)">❌ All Unavailable</button>
+      <button class="bulk-btn" onclick="collapseAll()">🗂 Collapse</button>
+    </div>
+  </div>
+  <div class="add-item-bar">
+    <button class="add-item-btn" onclick="openAddModal()">＋ Add New Item</button>
+  </div>
+  <div id="activeList"></div>
+</div>
+
+<!-- ═══ WITHDRAWN TAB ═══ -->
+<div id="pane-withdrawn" style="display:none">
+  <div class="wd-info">
+    Items withdrawn from the menu are stored here. Tap <strong>Restore</strong> to add them back to the active menu anytime. Tap <strong>Delete</strong> to permanently remove.
+  </div>
+  <div id="withdrawnList"></div>
+</div>
+
+<!-- ═══ SETTINGS TAB ═══ -->
+<div id="pane-settings" style="display:none">
+  <div style="padding:12px">
+    <div class="url-box" style="margin:0 0 12px">
+      <label>Menu Page URL (for QR code)</label>
+      <div class="url-row">
+        <input type="text" id="menuUrl" placeholder="https://yourusername.github.io/classic-cups-menu/menu.html">
+        <button onclick="openMenuUrl()">Open</button>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:10px;border:1px solid var(--cb);padding:12px;margin-bottom:12px;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Danger Zone</div>
+      <button onclick="clearWithdrawn()" style="width:100%;background:#FEE2E2;color:var(--red);border:1px solid #FECACA;padding:10px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;margin-bottom:6px;">🗑 Delete All Withdrawn Items</button>
+      <button onclick="resetAll()" style="width:100%;background:#FEE2E2;color:var(--red);border:1px solid #FECACA;padding:10px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;">⚠️ Reset All Data (Factory Reset)</button>
+    </div>
   </div>
 </div>
 
-<div class="menu-link-box">
-  <label>Menu page URL (for QR code)</label>
-  <div class="menu-link-row">
-    <input type="text" id="menuUrl" placeholder="https://yourname.netlify.app/menu.html" value="">
-    <button onclick="openMenuUrl()">Open</button>
+<!-- ═══ ADD / EDIT MODAL ═══ -->
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">Add New Item</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <label>Item Name *</label>
+    <input type="text" id="mName" placeholder="e.g. Chicken Samosa" maxlength="60">
+    <div class="modal-row" style="margin-top:12px">
+      <div>
+        <label>Price (₹) *</label>
+        <input type="number" id="mPrice" placeholder="0" min="0" max="9999">
+      </div>
+      <div>
+        <label>Category *</label>
+        <select id="mCat">
+          <option value="">Select…</option>
+          <option>Snacks</option>
+          <option>Plated Dishes</option>
+          <option>Loaded Fries</option>
+          <option>Sandwiches, Rolls & Burgers</option>
+          <option>Drinks</option>
+          <option>Fresh Juices & Sarbath</option>
+          <option>Shakes</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <label style="margin-top:12px">Description (optional)</label>
+    <textarea id="mDesc" rows="2" maxlength="120" placeholder="Short description shown on the menu…"></textarea>
+    <label style="margin-top:12px">Emoji Icon</label>
+    <input type="text" id="mEmoji" placeholder="🍽️" maxlength="4" style="max-width:80px">
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;background:#FFF8F0;border:1px solid var(--cb);border-radius:8px;padding:10px 12px;">
+      <div style="flex:1">
+        <div style="font-size:.82rem;font-weight:600">⭐ Mark as Best Seller</div>
+        <div style="font-size:.7rem;color:var(--muted)">Highlighted with a badge on the menu</div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="mBS"><span class="slider"></span></label>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-save-btn"   onclick="saveModal()">Save Item</button>
+    </div>
   </div>
 </div>
-
-<div id="listContainer"></div>
 
 <input type="file" class="hidden-file" id="fileInput" accept="image/*">
-<div class="toast" id="toast">Changes saved!</div>
+<div class="toast" id="toast"></div>
 
 <script>
-const AVAIL_KEY = 'classicCupsAvailability';
-const IMG_KEY   = 'classicCupsImages';
-const URL_KEY   = 'classicCupsMenuUrl';
+/* ══════════════════════════════════════
+   STORAGE KEYS
+══════════════════════════════════════ */
+const K_AVAIL = 'classicCupsAvailability';
+const K_IMG   = 'classicCupsImages';
+const K_BS    = 'classicCupsBestSellers';
+const K_DESC  = 'classicCupsDescriptions';
+const K_URL   = 'classicCupsMenuUrl';
+const K_ITEMS = 'classicCupsCustomItems';   // added/edited items
+const K_WD    = 'classicCupsWithdrawn';     // withdrawn item ids
 
-const MENU = [
-  {id:'cs',  name:'Chicken Samosa',            price:12,  cat:'Snacks',                        emoji:'🫓', bestseller:true},
-  {id:'as',  name:'Aloo Samosa',               price:15,  cat:'Snacks',                        emoji:'🫓'},
-  {id:'nf',  name:'Nuggets (with Fries)',       price:50,  cat:'Snacks',                        emoji:'🍗'},
-  {id:'cc',  name:'Chicken Cutlet',             price:15,  cat:'Snacks',                        emoji:'🍗'},
-  {id:'cw',  name:'Chicken Wings',              price:40,  cat:'Snacks',                        emoji:'🍗'},
-  {id:'ck',  name:'Chicken Stick',              price:50,  cat:'Snacks',                        emoji:'🍢'},
-  {id:'ffq', name:'French Fries (Quarter)',     price:30,  cat:'Snacks',                        emoji:'🍟'},
-  {id:'ffh', name:'French Fries (Half)',        price:50,  cat:'Snacks',                        emoji:'🍟'},
-  {id:'mg',  name:'Mangoda',                    price:20,  cat:'Snacks',                        emoji:'🟡'},
-  {id:'cp',  name:'Cauliflower Pakoda',         price:30,  cat:'Snacks',                        emoji:'🌿'},
-  {id:'km',  name:'Kaada Mutta Masala (Plate)', price:60,  cat:'Snacks',                        emoji:'🥚'},
-  {id:'eb',  name:'Egg Bajji',                  price:10,  cat:'Snacks',                        emoji:'🥚'},
-  {id:'ek',  name:'Egg Kizhi',                  price:15,  cat:'Snacks',                        emoji:'🥚'},
-  {id:'em',  name:'Egg Kanthari/Masala',        price:15,  cat:'Snacks',                        emoji:'🌶️'},
-  {id:'pp',  name:'Pazham Pori',                price:12,  cat:'Snacks',                        emoji:'🍌'},
-  {id:'un',  name:'Unnakkaya',                  price:20,  cat:'Snacks',                        emoji:'🍌'},
-  {id:'cmr', name:'Chicken Mini Roll',          price:20,  cat:'Snacks',                        emoji:'🌯'},
-  {id:'cpc', name:'Chatti Pathiri (Chicken)',   price:25,  cat:'Snacks',                        emoji:'🫓'},
-  {id:'cps', name:'Chatti Pathiri (Sweet)',     price:20,  cat:'Snacks',                        emoji:'🍯'},
-  {id:'ip',  name:'Irachi Pathiri',             price:30,  cat:'Snacks',                        emoji:'🫓'},
-  {id:'ci',  name:'Chicken Ilayada',            price:15,  cat:'Snacks',                        emoji:'🍃'},
-  {id:'bi',  name:'Banana Ilayada',             price:12,  cat:'Snacks',                        emoji:'🍃'},
-  {id:'kls', name:'Kallummakkaaya (Small)',     price:20,  cat:'Snacks',                        emoji:'🐚'},
-  {id:'kll', name:'Kallummakkaaya (Large)',     price:25,  cat:'Snacks',                        emoji:'🐚'},
-  {id:'ckm', name:'Chicken Kalmas',             price:15,  cat:'Snacks',                        emoji:'🍗'},
-  {id:'fk',  name:'Fish Kalmas',               price:20,  cat:'Snacks',                        emoji:'🐟'},
-  {id:'cb',  name:'Cheese Box',                price:40,  cat:'Snacks',                        emoji:'🧀'},
-  {id:'ia',  name:'Irachi Ada',                price:20,  cat:'Snacks',                        emoji:'🍃'},
-  {id:'bpz', name:'Bread Pizza',               price:30,  cat:'Snacks',                        emoji:'🍕'},
-  {id:'kb',  name:'Kappa Biriyani (Half)',      price:50,  cat:'Plated Dishes',                 emoji:'🍲'},
-  {id:'mo',  name:'Momos (5 Pieces)',           price:50,  cat:'Plated Dishes',                 emoji:'🥟'},
-  {id:'kn',  name:'Kunjipathal (Half)',         price:50,  cat:'Plated Dishes',                 emoji:'🍲'},
-  {id:'wp',  name:'White Sauce Pasta (Half)',   price:50,  cat:'Plated Dishes',                 emoji:'🍝'},
-  {id:'ep',  name:'Eenth Pidi',                price:75,  cat:'Plated Dishes',                 emoji:'🫙'},
-  {id:'pv',  name:'Palvazhakka',               price:40,  cat:'Plated Dishes',                 emoji:'🍈'},
-  {id:'ca',  name:'Chicken Aleesa',            price:50,  cat:'Plated Dishes',                 emoji:'🍛'},
-  {id:'pk',  name:'Paal Kappa with Beef',      price:80,  cat:'Plated Dishes',                 emoji:'🍛'},
-  {id:'ppb', name:'Pazham Pori with Beef',     price:70,  cat:'Plated Dishes',                 emoji:'🍌'},
-  {id:'fr',  name:'Loaded Fries – Regular',    price:140, cat:'Loaded Fries',                  emoji:'🍟'},
-  {id:'fs',  name:'Loaded Fries – Spicy',      price:180, cat:'Loaded Fries',                  emoji:'🌶️'},
-  {id:'cms', name:'Chicken Mayo Sandwich',     price:50,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🥪'},
-  {id:'cbp', name:'Chicken Bread Pocket',      price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🫓'},
-  {id:'csh', name:'Chicken Shavarma Roll',     price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🌯'},
-  {id:'bks', name:'Beef Keema Sandwich',       price:25,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🥪'},
-  {id:'czb', name:'Chicken Zinger Burger',     price:80,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🍔'},
-  {id:'mzb', name:'Mini Zinger Burger',        price:30,  cat:'Sandwiches, Rolls & Burgers',   emoji:'🍔'},
-  {id:'mt',  name:'Masala Tea',                price:20,  cat:'Drinks',                        emoji:'🍵', bestseller:true},
-  {id:'mkt', name:'Milk Tea',                  price:15,  cat:'Drinks',                        emoji:'🧋'},
-  {id:'mc',  name:'Milk Coffee',               price:20,  cat:'Drinks',                        emoji:'☕'},
-  {id:'gt',  name:'Ginger Tea',                price:20,  cat:'Drinks',                        emoji:'🍵'},
-  {id:'ct',  name:'Cardamom Tea',              price:20,  cat:'Drinks',                        emoji:'🍵'},
-  {id:'bst', name:'Boost',                     price:25,  cat:'Drinks',                        emoji:'🥛'},
-  {id:'hl',  name:'Horlicks',                  price:25,  cat:'Drinks',                        emoji:'🥛'},
-  {id:'bt',  name:'Black Tea',                 price:10,  cat:'Drinks',                        emoji:'🍵'},
-  {id:'lt',  name:'Lemon Tea',                 price:12,  cat:'Drinks',                        emoji:'🍋'},
-  {id:'mnt', name:'Mint Tea',                  price:12,  cat:'Drinks',                        emoji:'🌿'},
-  {id:'avm', name:'Avil Milk Regular',         price:40,  cat:'Drinks',                        emoji:'🥛'},
-  {id:'avs', name:'Avil Milk Special',         price:60,  cat:'Drinks',                        emoji:'🥛'},
-  {id:'oj',  name:'Orange Juice',              price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍊'},
-  {id:'pj',  name:'Pineapple Juice',           price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍍'},
-  {id:'smj', name:'Shamam Juice',              price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍈'},
-  {id:'wmj', name:'Water Melon Juice',         price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🍉'},
-  {id:'gj',  name:'Grape Juice',               price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🍇'},
-  {id:'aj',  name:'Anar Juice',                price:60,  cat:'Fresh Juices & Sarbath',        emoji:'❤️'},
-  {id:'mj',  name:'Musambi Juice',             price:50,  cat:'Fresh Juices & Sarbath',        emoji:'🟡'},
-  {id:'ns',  name:'Nannari Sarbath',           price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🌿'},
-  {id:'ss',  name:'Soda Sarbath',              price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
-  {id:'mks', name:'Milk Sarbath',              price:30,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
-  {id:'bm',  name:'Butter Milk (Moru)',        price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
-  {id:'msd', name:'Masala Soda',               price:15,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
-  {id:'mru', name:'Moru Soda',                 price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🫧'},
-  {id:'ls',  name:'Lime Soda',                 price:15,  cat:'Fresh Juices & Sarbath',        emoji:'🍋'},
-  {id:'fl',  name:'Fresh Lime',                price:20,  cat:'Fresh Juices & Sarbath',        emoji:'🍋'},
-  {id:'mnl', name:'Mint Lime',                 price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🌿'},
-  {id:'grl', name:'Grape Lime',                price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍇'},
-  {id:'pl',  name:'Pineapple Lime',            price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍍'},
-  {id:'wml', name:'Watermelon Lime',           price:25,  cat:'Fresh Juices & Sarbath',        emoji:'🍉'},
-  {id:'hnl', name:'Honey Lime',                price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🍯'},
-  {id:'lsi', name:'Lassi',                     price:40,  cat:'Fresh Juices & Sarbath',        emoji:'🥛'},
-  {id:'tcs', name:'Tender Coconut Shake',      price:60,  cat:'Shakes',                        emoji:'🥥'},
-  {id:'apsh',name:'Apple Shake',               price:60,  cat:'Shakes',                        emoji:'🍎'},
-  {id:'mnsh',name:'Mango Shake',               price:60,  cat:'Shakes',                        emoji:'🥭'},
-  {id:'ansh',name:'Anar Shake',                price:70,  cat:'Shakes',                        emoji:'❤️'},
-  {id:'pash',name:'Papaya Shake',              price:60,  cat:'Shakes',                        emoji:'🍈'},
-  {id:'avsh',name:'Avocado Shake',             price:80,  cat:'Shakes',                        emoji:'🥑'},
-  {id:'shsh',name:'Sharjah Shake',             price:60,  cat:'Shakes',                        emoji:'🥛'},
-  {id:'chsh',name:'Chikku Shake',              price:60,  cat:'Shakes',                        emoji:'🟤'},
-  {id:'bosh',name:'Boost Shake',               price:60,  cat:'Shakes',                        emoji:'🥛'},
+/* ══════════════════════════════════════
+   PASSWORD
+══════════════════════════════════════ */
+function unlock() {
+  if (document.getElementById('pwInput').value === 'ccadmin2026!') {
+    document.getElementById('lockScreen').classList.add('hidden');
+    sessionStorage.setItem('ccUnlocked','1');
+  } else {
+    const e = document.getElementById('lockErr');
+    e.classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>e.classList.remove('show'),3000);
+  }
+}
+if (sessionStorage.getItem('ccUnlocked')==='1')
+  document.getElementById('lockScreen').classList.add('hidden');
+
+/* ══════════════════════════════════════
+   DEFAULT MENU
+══════════════════════════════════════ */
+const DEFAULT_MENU = [
+  {id:'cs',  name:'Chicken Samosa',            price:12,  cat:'Snacks',                       emoji:'🫓', defaultBS:true},
+  {id:'as',  name:'Aloo Samosa',               price:15,  cat:'Snacks',                       emoji:'🫓'},
+  {id:'nf',  name:'Nuggets (with Fries)',       price:50,  cat:'Snacks',                       emoji:'🍗'},
+  {id:'cc',  name:'Chicken Cutlet',             price:15,  cat:'Snacks',                       emoji:'🍗'},
+  {id:'cw',  name:'Chicken Wings',              price:40,  cat:'Snacks',                       emoji:'🍗'},
+  {id:'ck',  name:'Chicken Stick',              price:50,  cat:'Snacks',                       emoji:'🍢'},
+  {id:'ffq', name:'French Fries (Quarter)',     price:30,  cat:'Snacks',                       emoji:'🍟'},
+  {id:'ffh', name:'French Fries (Half)',        price:50,  cat:'Snacks',                       emoji:'🍟'},
+  {id:'mg',  name:'Mangoda',                    price:20,  cat:'Snacks',                       emoji:'🟡'},
+  {id:'cp',  name:'Cauliflower Pakoda',         price:30,  cat:'Snacks',                       emoji:'🌿'},
+  {id:'km',  name:'Kaada Mutta Masala (Plate)', price:60,  cat:'Snacks',                       emoji:'🥚'},
+  {id:'eb',  name:'Egg Bajji',                  price:10,  cat:'Snacks',                       emoji:'🥚'},
+  {id:'ek',  name:'Egg Kizhi',                  price:15,  cat:'Snacks',                       emoji:'🥚'},
+  {id:'em',  name:'Egg Kanthari/Masala',        price:15,  cat:'Snacks',                       emoji:'🌶️'},
+  {id:'pp',  name:'Pazham Pori',                price:12,  cat:'Snacks',                       emoji:'🍌'},
+  {id:'un',  name:'Unnakkaya',                  price:20,  cat:'Snacks',                       emoji:'🍌'},
+  {id:'cmr', name:'Chicken Mini Roll',          price:20,  cat:'Snacks',                       emoji:'🌯'},
+  {id:'cpc', name:'Chatti Pathiri (Chicken)',   price:25,  cat:'Snacks',                       emoji:'🫓'},
+  {id:'cps', name:'Chatti Pathiri (Sweet)',     price:20,  cat:'Snacks',                       emoji:'🍯'},
+  {id:'ip',  name:'Irachi Pathiri',             price:30,  cat:'Snacks',                       emoji:'🫓'},
+  {id:'ci',  name:'Chicken Ilayada',            price:15,  cat:'Snacks',                       emoji:'🍃'},
+  {id:'bi',  name:'Banana Ilayada',             price:12,  cat:'Snacks',                       emoji:'🍃'},
+  {id:'kls', name:'Kallummakkaaya (Small)',     price:20,  cat:'Snacks',                       emoji:'🐚'},
+  {id:'kll', name:'Kallummakkaaya (Large)',     price:25,  cat:'Snacks',                       emoji:'🐚'},
+  {id:'ckm', name:'Chicken Kalmas',             price:15,  cat:'Snacks',                       emoji:'🍗'},
+  {id:'fk',  name:'Fish Kalmas',               price:20,  cat:'Snacks',                       emoji:'🐟'},
+  {id:'cb',  name:'Cheese Box',                price:40,  cat:'Snacks',                       emoji:'🧀'},
+  {id:'ia',  name:'Irachi Ada',                price:20,  cat:'Snacks',                       emoji:'🍃'},
+  {id:'bpz', name:'Bread Pizza',               price:30,  cat:'Snacks',                       emoji:'🍕'},
+  {id:'kb',  name:'Kappa Biriyani (Half)',      price:50,  cat:'Plated Dishes',                emoji:'🍲'},
+  {id:'mo',  name:'Momos (5 Pieces)',           price:50,  cat:'Plated Dishes',                emoji:'🥟'},
+  {id:'kn',  name:'Kunjipathal (Half)',         price:50,  cat:'Plated Dishes',                emoji:'🍲'},
+  {id:'wp',  name:'White Sauce Pasta (Half)',   price:50,  cat:'Plated Dishes',                emoji:'🍝'},
+  {id:'ep',  name:'Eenth Pidi',                price:75,  cat:'Plated Dishes',                emoji:'🫙'},
+  {id:'pv',  name:'Palvazhakka',               price:40,  cat:'Plated Dishes',                emoji:'🍈'},
+  {id:'ca',  name:'Chicken Aleesa',            price:50,  cat:'Plated Dishes',                emoji:'🍛'},
+  {id:'pk',  name:'Paal Kappa with Beef',      price:80,  cat:'Plated Dishes',                emoji:'🍛'},
+  {id:'ppb', name:'Pazham Pori with Beef',     price:70,  cat:'Plated Dishes',                emoji:'🍌'},
+  {id:'fr',  name:'Loaded Fries – Regular',    price:140, cat:'Loaded Fries',                 emoji:'🍟'},
+  {id:'fs',  name:'Loaded Fries – Spicy',      price:180, cat:'Loaded Fries',                 emoji:'🌶️'},
+  {id:'cms', name:'Chicken Mayo Sandwich',     price:50,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🥪'},
+  {id:'cbp', name:'Chicken Bread Pocket',      price:30,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🫓'},
+  {id:'csh', name:'Chicken Shavarma Roll',     price:30,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🌯'},
+  {id:'bks', name:'Beef Keema Sandwich',       price:25,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🥪'},
+  {id:'czb', name:'Chicken Zinger Burger',     price:80,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🍔'},
+  {id:'mzb', name:'Mini Zinger Burger',        price:30,  cat:'Sandwiches, Rolls & Burgers',  emoji:'🍔'},
+  {id:'mt',  name:'Masala Tea',                price:20,  cat:'Drinks',                       emoji:'🍵', defaultBS:true},
+  {id:'mkt', name:'Milk Tea',                  price:15,  cat:'Drinks',                       emoji:'🧋'},
+  {id:'mc',  name:'Milk Coffee',               price:20,  cat:'Drinks',                       emoji:'☕'},
+  {id:'gt',  name:'Ginger Tea',                price:20,  cat:'Drinks',                       emoji:'🍵'},
+  {id:'ct',  name:'Cardamom Tea',              price:20,  cat:'Drinks',                       emoji:'🍵'},
+  {id:'bst', name:'Boost',                     price:25,  cat:'Drinks',                       emoji:'🥛'},
+  {id:'hl',  name:'Horlicks',                  price:25,  cat:'Drinks',                       emoji:'🥛'},
+  {id:'bt',  name:'Black Tea',                 price:10,  cat:'Drinks',                       emoji:'🍵'},
+  {id:'lt',  name:'Lemon Tea',                 price:12,  cat:'Drinks',                       emoji:'🍋'},
+  {id:'mnt', name:'Mint Tea',                  price:12,  cat:'Drinks',                       emoji:'🌿'},
+  {id:'avm', name:'Avil Milk Regular',         price:40,  cat:'Drinks',                       emoji:'🥛'},
+  {id:'avs', name:'Avil Milk Special',         price:60,  cat:'Drinks',                       emoji:'🥛'},
+  {id:'oj',  name:'Orange Juice',              price:50,  cat:'Fresh Juices & Sarbath',       emoji:'🍊'},
+  {id:'pj',  name:'Pineapple Juice',           price:50,  cat:'Fresh Juices & Sarbath',       emoji:'🍍'},
+  {id:'smj', name:'Shamam Juice',              price:50,  cat:'Fresh Juices & Sarbath',       emoji:'🍈'},
+  {id:'wmj', name:'Water Melon Juice',         price:40,  cat:'Fresh Juices & Sarbath',       emoji:'🍉'},
+  {id:'gj',  name:'Grape Juice',               price:50,  cat:'Fresh Juices & Sarbath',       emoji:'🍇'},
+  {id:'aj',  name:'Anar Juice',                price:60,  cat:'Fresh Juices & Sarbath',       emoji:'❤️'},
+  {id:'mj',  name:'Musambi Juice',             price:50,  cat:'Fresh Juices & Sarbath',       emoji:'🟡'},
+  {id:'ns',  name:'Nannari Sarbath',           price:20,  cat:'Fresh Juices & Sarbath',       emoji:'🌿'},
+  {id:'ss',  name:'Soda Sarbath',              price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🫧'},
+  {id:'mks', name:'Milk Sarbath',              price:30,  cat:'Fresh Juices & Sarbath',       emoji:'🥛'},
+  {id:'bm',  name:'Butter Milk (Moru)',        price:20,  cat:'Fresh Juices & Sarbath',       emoji:'🥛'},
+  {id:'msd', name:'Masala Soda',               price:15,  cat:'Fresh Juices & Sarbath',       emoji:'🫧'},
+  {id:'mru', name:'Moru Soda',                 price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🫧'},
+  {id:'ls',  name:'Lime Soda',                 price:15,  cat:'Fresh Juices & Sarbath',       emoji:'🍋'},
+  {id:'fl',  name:'Fresh Lime',                price:20,  cat:'Fresh Juices & Sarbath',       emoji:'🍋'},
+  {id:'mnl', name:'Mint Lime',                 price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🌿'},
+  {id:'grl', name:'Grape Lime',                price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🍇'},
+  {id:'pl',  name:'Pineapple Lime',            price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🍍'},
+  {id:'wml', name:'Watermelon Lime',           price:25,  cat:'Fresh Juices & Sarbath',       emoji:'🍉'},
+  {id:'hnl', name:'Honey Lime',                price:40,  cat:'Fresh Juices & Sarbath',       emoji:'🍯'},
+  {id:'lsi', name:'Lassi',                     price:40,  cat:'Fresh Juices & Sarbath',       emoji:'🥛'},
+  {id:'tcs', name:'Tender Coconut Shake',      price:60,  cat:'Shakes',                       emoji:'🥥'},
+  {id:'apsh',name:'Apple Shake',               price:60,  cat:'Shakes',                       emoji:'🍎'},
+  {id:'mnsh',name:'Mango Shake',               price:60,  cat:'Shakes',                       emoji:'🥭'},
+  {id:'ansh',name:'Anar Shake',                price:70,  cat:'Shakes',                       emoji:'❤️'},
+  {id:'pash',name:'Papaya Shake',              price:60,  cat:'Shakes',                       emoji:'🍈'},
+  {id:'avsh',name:'Avocado Shake',             price:80,  cat:'Shakes',                       emoji:'🥑'},
+  {id:'shsh',name:'Sharjah Shake',             price:60,  cat:'Shakes',                       emoji:'🥛'},
+  {id:'chsh',name:'Chikku Shake',              price:60,  cat:'Shakes',                       emoji:'🟤'},
+  {id:'bosh',name:'Boost Shake',               price:60,  cat:'Shakes',                       emoji:'🥛'},
 ];
 
-let avail = {};
-let imgs  = {};
-let pendingId = null;
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let avail       = {};   // id -> bool (false = unavailable today)
+let imgs        = {};   // id -> base64
+let bestSellers = {};   // id -> bool
+let descs       = {};   // id -> string
+let customItems = [];   // extra / edited items [{id,name,price,cat,emoji}]
+let withdrawn   = new Set(); // ids of withdrawn items
+let openPanels  = new Set();
+let pendingImgId = null;
+let editingId    = null; // null = adding new
 
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
 function init() {
-  try { const v = localStorage.getItem(AVAIL_KEY); if (v) avail = JSON.parse(v); } catch(e){}
-  try { const v = localStorage.getItem(IMG_KEY);   if (v) imgs  = JSON.parse(v); } catch(e){}
-  try { const u = localStorage.getItem(URL_KEY);   if (u) document.getElementById('menuUrl').value = u; } catch(e){}
-  renderList();
+  try { const v=localStorage.getItem(K_AVAIL); if(v) avail=JSON.parse(v); }catch(e){}
+  try { const v=localStorage.getItem(K_IMG);   if(v) imgs=JSON.parse(v);  }catch(e){}
+  try { const v=localStorage.getItem(K_BS);    if(v) bestSellers=JSON.parse(v); }catch(e){}
+  try { const v=localStorage.getItem(K_DESC);  if(v) descs=JSON.parse(v); }catch(e){}
+  try { const v=localStorage.getItem(K_ITEMS); if(v) customItems=JSON.parse(v); }catch(e){}
+  try { const v=localStorage.getItem(K_WD);    if(v) withdrawn=new Set(JSON.parse(v)); }catch(e){}
+  try { const u=localStorage.getItem(K_URL);   if(u) document.getElementById('menuUrl').value=u; }catch(e){}
+  // seed default best sellers
+  DEFAULT_MENU.forEach(i=>{ if(i.defaultBS && bestSellers[i.id]===undefined) bestSellers[i.id]=true; });
+  renderActive();
+  renderWithdrawn();
   updateStats();
 }
 
-function renderList() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const cats = [...new Set(MENU.map(i => i.cat))];
+/* ══════════════════════════════════════
+   FULL MENU (default + custom, no withdrawn)
+══════════════════════════════════════ */
+function getActiveMenu() {
+  const base = DEFAULT_MENU.map(i => {
+    const custom = customItems.find(c=>c.id===i.id);
+    return custom ? {...i,...custom} : {...i};
+  });
+  const added = customItems.filter(c=>!DEFAULT_MENU.find(d=>d.id===c.id));
+  return [...base,...added].filter(i=>!withdrawn.has(i.id));
+}
+
+function getWithdrawnItems() {
+  const all = [...DEFAULT_MENU, ...customItems.filter(c=>!DEFAULT_MENU.find(d=>d.id===c.id))];
+  const seen = new Set();
+  return all.filter(i=>{
+    if(seen.has(i.id)) return false;
+    seen.add(i.id);
+    return withdrawn.has(i.id);
+  });
+}
+
+/* ══════════════════════════════════════
+   RENDER ACTIVE LIST
+══════════════════════════════════════ */
+function renderActive() {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const MENU = getActiveMenu();
+  const cats = [...new Set(MENU.map(i=>i.cat))];
   let html = '';
-  cats.forEach(cat => {
-    const items = MENU.filter(i => i.cat === cat && (!q || i.name.toLowerCase().includes(q)));
-    if (!items.length) return;
-    html += '<div class="sec-head">' + cat + '</div>';
-    items.forEach(item => {
-      const on = avail[item.id] !== false;
+  cats.forEach(cat=>{
+    const items = MENU.filter(i=>i.cat===cat && (!q||i.name.toLowerCase().includes(q)));
+    if(!items.length) return;
+    html += `<div class="sec-head">${esc(cat)}<span class="sec-count">${items.length} items</span></div>`;
+    items.forEach(item=>{
+      const on   = avail[item.id] !== false;
+      const isBs = !!bestSellers[item.id];
+      const desc = descs[item.id] || '';
       const imgSrc = imgs[item.id];
-      const thumbInner = imgSrc
-        ? '<img src="' + imgSrc + '" alt="">'
-        : 'IMG';
-      html += '<div class="item-row' + (!on ? ' unavailable' : '') + '" id="row-' + item.id + '">'
-            + '<div class="item-emoji">' + item.emoji + '</div>'
-            + '<div class="item-info">'
-            + '<div class="item-name">' + item.name + (item.bestseller ? '<span class="bs-badge">⭐ Best Seller</span>' : '') + '</div>'
-            + '<div class="item-price">₹' + item.price + '</div>'
-            + '</div>'
-            + '<label class="toggle"><input type="checkbox"' + (on ? ' checked' : '') + ' onchange="toggle(\'' + item.id + '\',this.checked)"><span class="slider"></span></label>'
-            + '<div class="img-thumb" onclick="pickImg(\'' + item.id + '\')">' + thumbInner + '</div>'
-            + '<button class="cam-btn" onclick="pickImg(\'' + item.id + '\')">📷</button>'
-            + '</div>';
+      const panelOpen = openPanels.has(item.id);
+      const thumb = imgSrc ? `<img src="${imgSrc}" alt="">` : 'IMG';
+      const imgPrev = imgSrc
+        ? `<div class="img-prev-wrap"><img src="${imgSrc}" alt=""><button class="img-rm-btn" onclick="removeImg('${item.id}')">✕</button></div>`
+        : '';
+      html += `
+      <div class="item-card${!on?' unavailable':''}${isBs?' is-bs':''}" id="card-${item.id}">
+        <div class="item-main">
+          <div class="item-emoji">${item.emoji||'🍽️'}</div>
+          <div class="item-info">
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="item-meta">
+              <span class="item-price">₹${item.price}</span>
+              ${isBs?'<span class="bs-badge">⭐ Best Seller</span>':''}
+              ${desc?`<span class="desc-prev">${esc(desc)}</span>`:''}
+            </div>
+          </div>
+          <div class="item-ctrls">
+            <label class="toggle" title="Available today">
+              <input type="checkbox" ${on?'checked':''} onchange="toggleAvail('${item.id}',this.checked)">
+              <span class="slider"></span>
+            </label>
+            <button class="icon-btn${isBs?' star-on':''}" title="Best Seller" onclick="toggleBS('${item.id}')">${isBs?'⭐':'☆'}</button>
+            <div class="img-thumb-sm" onclick="togglePanel('${item.id}')">${thumb}</div>
+            <button class="icon-btn" title="Edit" onclick="openEditModal('${item.id}')">✏️</button>
+            <button class="icon-btn" title="More" onclick="togglePanel('${item.id}')">${panelOpen?'▲':'▼'}</button>
+          </div>
+        </div>
+        <div class="edit-panel${panelOpen?' open':''}" id="panel-${item.id}">
+          <span class="ep-label">Description</span>
+          <textarea class="ep-input" rows="2" maxlength="120"
+            placeholder="Short description shown on the menu…"
+            oninput="updateDesc('${item.id}',this.value)">${esc(desc)}</textarea>
+          <div class="desc-char" id="dchar-${item.id}">${desc.length} / 120</div>
+          <span class="ep-label" style="margin-top:10px">Photo</span>
+          <div class="ep-row">
+            <button class="img-up-btn" onclick="pickImg('${item.id}')">📷 ${imgSrc?'Change photo':'Upload photo'}</button>
+            ${imgPrev}
+          </div>
+          <div class="ep-action-row">
+            <button class="ep-withdraw-btn" onclick="withdrawItem('${item.id}')">📦 Withdraw from Menu</button>
+            <button class="ep-delete-btn"   onclick="deleteItem('${item.id}')">🗑 Delete Permanently</button>
+          </div>
+        </div>
+      </div>`;
     });
   });
-  document.getElementById('listContainer').innerHTML = html;
+  if(!html) html = `<div class="empty-state"><div class="e-icon">🔍</div><p>No items found.</p></div>`;
+  document.getElementById('activeList').innerHTML = html;
 }
 
-function toggle(id, on) {
+/* ══════════════════════════════════════
+   RENDER WITHDRAWN LIST
+══════════════════════════════════════ */
+function renderWithdrawn() {
+  const items = getWithdrawnItems();
+  if(!items.length) {
+    document.getElementById('withdrawnList').innerHTML =
+      `<div class="empty-state"><div class="e-icon">📦</div><p>No withdrawn items.<br>Items you withdraw will appear here.</p></div>`;
+    return;
+  }
+  const cats = [...new Set(items.map(i=>i.cat))];
+  let html = '';
+  cats.forEach(cat=>{
+    const catItems = items.filter(i=>i.cat===cat);
+    html += `<div class="sec-head">${esc(cat)}<span class="sec-count">${catItems.length} items</span></div>`;
+    catItems.forEach(item=>{
+      const desc = descs[item.id]||'';
+      const imgSrc = imgs[item.id];
+      const thumb = imgSrc?`<img src="${imgSrc}" alt="">`:item.emoji||'🍽️';
+      html += `
+      <div class="item-card withdrawn-card" id="card-wd-${item.id}">
+        <div class="item-main">
+          <div class="item-emoji">${item.emoji||'🍽️'}</div>
+          <div class="item-info">
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="item-meta">
+              <span class="item-price">₹${item.price}</span>
+              <span class="wd-badge">📦 Withdrawn</span>
+              ${desc?`<span class="desc-prev">${esc(desc)}</span>`:''}
+            </div>
+          </div>
+          <div class="item-ctrls">
+            <button class="restore-btn" onclick="restoreItem('${item.id}')">↩ Restore</button>
+            <button class="icon-btn red-btn" title="Delete permanently" onclick="deleteItem('${item.id}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('withdrawnList').innerHTML = html;
+}
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+let activeTab = 'menu';
+function switchTab(tab) {
+  activeTab = tab;
+  ['menu','withdrawn','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('pane-'+t).style.display = t===tab?'block':'none';
+  });
+}
+
+/* ══════════════════════════════════════
+   ITEM ACTIONS
+══════════════════════════════════════ */
+function toggleAvail(id, on) {
   avail[id] = on;
-  const row = document.getElementById('row-' + id);
-  if (row) row.className = 'item-row' + (!on ? ' unavailable' : '');
+  const card = document.getElementById('card-'+id);
+  if(card) card.classList.toggle('unavailable',!on);
   updateStats();
 }
 
-function updateStats() {
-  const total   = MENU.length;
-  const unavail = MENU.filter(i => avail[i.id] === false).length;
-  document.getElementById('nTotal').textContent   = total;
-  document.getElementById('nAvail').textContent   = total - unavail;
-  document.getElementById('nUnavail').textContent = unavail;
+function toggleBS(id) {
+  bestSellers[id] = !bestSellers[id];
+  updateStats();
+  renderActive();
+}
+
+function togglePanel(id) {
+  if(openPanels.has(id)) openPanels.delete(id); else openPanels.add(id);
+  renderActive();
+  setTimeout(()=>{
+    const el = document.getElementById('panel-'+id);
+    if(el && openPanels.has(id)) el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },50);
+}
+
+function collapseAll() { openPanels.clear(); renderActive(); }
+
+function updateDesc(id,val) {
+  descs[id]=val;
+  const ch=document.getElementById('dchar-'+id);
+  if(ch) ch.textContent=val.length+' / 120';
+}
+
+function withdrawItem(id) {
+  if(!confirm('Withdraw this item from the menu? You can restore it later from the Withdrawn tab.')) return;
+  withdrawn.add(id);
+  openPanels.delete(id);
+  renderActive();
+  renderWithdrawn();
+  updateStats();
+  showToast('📦 Item withdrawn – tap Save to confirm');
+}
+
+function restoreItem(id) {
+  withdrawn.delete(id);
+  renderActive();
+  renderWithdrawn();
+  updateStats();
+  showToast('✅ Item restored to menu – tap Save to confirm');
+}
+
+function deleteItem(id) {
+  if(!confirm('Permanently delete this item? This cannot be undone.')) return;
+  withdrawn.delete(id);
+  customItems = customItems.filter(c=>c.id!==id);
+  delete imgs[id]; delete descs[id]; delete bestSellers[id]; delete avail[id];
+  openPanels.delete(id);
+  renderActive();
+  renderWithdrawn();
+  updateStats();
+  showToast('🗑 Item deleted – tap Save to confirm');
 }
 
 function bulkSet(on) {
-  MENU.forEach(i => { avail[i.id] = on; });
-  renderList();
+  getActiveMenu().forEach(i=>{ avail[i.id]=on; });
+  renderActive();
   updateStats();
 }
 
+/* ══════════════════════════════════════
+   ADD / EDIT MODAL
+══════════════════════════════════════ */
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '＋ Add New Item';
+  document.getElementById('mName').value  = '';
+  document.getElementById('mPrice').value = '';
+  document.getElementById('mCat').value   = '';
+  document.getElementById('mDesc').value  = '';
+  document.getElementById('mEmoji').value = '🍽️';
+  document.getElementById('mBS').checked  = false;
+  document.getElementById('modalBg').classList.remove('hidden');
+}
+
+function openEditModal(id) {
+  editingId = id;
+  const MENU = getActiveMenu();
+  const item = MENU.find(i=>i.id===id);
+  if(!item) return;
+  document.getElementById('modalTitle').textContent = '✏️ Edit Item';
+  document.getElementById('mName').value  = item.name;
+  document.getElementById('mPrice').value = item.price;
+  document.getElementById('mCat').value   = item.cat;
+  document.getElementById('mDesc').value  = descs[id]||'';
+  document.getElementById('mEmoji').value = item.emoji||'🍽️';
+  document.getElementById('mBS').checked  = !!bestSellers[id];
+  document.getElementById('modalBg').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.add('hidden');
+  editingId = null;
+}
+
+function saveModal() {
+  const name  = document.getElementById('mName').value.trim();
+  const price = parseInt(document.getElementById('mPrice').value);
+  const cat   = document.getElementById('mCat').value;
+  const desc  = document.getElementById('mDesc').value.trim();
+  const emoji = document.getElementById('mEmoji').value.trim()||'🍽️';
+  const isBs  = document.getElementById('mBS').checked;
+
+  if(!name)         { alert('Please enter an item name.');  return; }
+  if(isNaN(price))  { alert('Please enter a valid price.'); return; }
+  if(!cat)          { alert('Please select a category.');   return; }
+
+  if(editingId) {
+    // Update existing
+    const existing = customItems.findIndex(c=>c.id===editingId);
+    const updated = {id:editingId, name, price, cat, emoji};
+    if(existing>=0) customItems[existing] = updated;
+    else customItems.push(updated);
+    bestSellers[editingId] = isBs;
+    if(desc) descs[editingId]=desc; else delete descs[editingId];
+    showToast('✏️ Item updated – tap Save to confirm');
+  } else {
+    // Add new
+    const newId = 'custom_'+Date.now();
+    customItems.push({id:newId, name, price, cat, emoji});
+    bestSellers[newId] = isBs;
+    if(desc) descs[newId]=desc;
+    avail[newId] = true;
+    showToast('✅ Item added – tap Save to confirm');
+  }
+
+  closeModal();
+  renderActive();
+  updateStats();
+}
+
+/* ══════════════════════════════════════
+   STATS
+══════════════════════════════════════ */
+function updateStats() {
+  const active  = getActiveMenu();
+  const total   = active.length;
+  const unavail = active.filter(i=>avail[i.id]===false).length;
+  const bsCount = active.filter(i=>!!bestSellers[i.id]).length;
+  const wdCount = withdrawn.size;
+  document.getElementById('nTotal').textContent   = total;
+  document.getElementById('nAvail').textContent   = total-unavail;
+  document.getElementById('nUnavail').textContent = unavail;
+  document.getElementById('nBS').textContent      = bsCount;
+  document.getElementById('nWD').textContent      = wdCount;
+}
+
+/* ══════════════════════════════════════
+   SAVE
+══════════════════════════════════════ */
 function saveAll() {
+  // flush open textareas
+  document.querySelectorAll('.edit-panel.open textarea').forEach(ta=>{
+    const id = ta.closest('.item-card')?.id?.replace('card-','');
+    if(id) descs[id]=ta.value;
+  });
   try {
-    localStorage.setItem(AVAIL_KEY, JSON.stringify(avail));
-    localStorage.setItem(IMG_KEY,   JSON.stringify(imgs));
+    localStorage.setItem(K_AVAIL, JSON.stringify(avail));
+    localStorage.setItem(K_IMG,   JSON.stringify(imgs));
+    localStorage.setItem(K_BS,    JSON.stringify(bestSellers));
+    localStorage.setItem(K_DESC,  JSON.stringify(descs));
+    localStorage.setItem(K_ITEMS, JSON.stringify(customItems));
+    localStorage.setItem(K_WD,    JSON.stringify([...withdrawn]));
     const url = document.getElementById('menuUrl').value.trim();
-    if (url) localStorage.setItem(URL_KEY, url);
-    showToast('Changes saved!');
+    if(url) localStorage.setItem(K_URL, url);
+    showToast('✅ All changes saved!');
   } catch(e) {
-    alert('Could not save – storage may be full (large images). Try clearing some images.');
+    alert('Could not save – storage may be full. Try removing some photos.');
   }
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
+/* ══════════════════════════════════════
+   IMAGES
+══════════════════════════════════════ */
 function pickImg(id) {
-  pendingId = id;
+  pendingImgId = id;
   const f = document.getElementById('fileInput');
-  f.value = '';
-  f.click();
+  f.value=''; f.click();
 }
 
-function openMenuUrl() {
-  const url = document.getElementById('menuUrl').value.trim();
-  if (url) window.open(url, '_blank');
-  else alert('Enter the menu URL first.');
+function removeImg(id) {
+  delete imgs[id];
+  renderActive();
+  showToast('Photo removed – tap Save to confirm');
 }
 
-document.getElementById('fileInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file || !pendingId) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    imgs[pendingId] = ev.target.result;
-    renderList();
-    showToast('Photo updated – remember to Save!');
+document.getElementById('fileInput').addEventListener('change',function(e){
+  const file=e.target.files[0];
+  if(!file||!pendingImgId) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const img=new Image();
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      const MAX=400;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      imgs[pendingImgId]=canvas.toDataURL('image/jpeg',.75);
+      openPanels.add(pendingImgId);
+      renderActive();
+      showToast('📷 Photo added – tap Save to confirm');
+    };
+    img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-window.toggle   = toggle;
-window.bulkSet  = bulkSet;
-window.saveAll  = saveAll;
-window.pickImg  = pickImg;
-window.openMenuUrl = openMenuUrl;
+/* ══════════════════════════════════════
+   SETTINGS ACTIONS
+══════════════════════════════════════ */
+function clearWithdrawn() {
+  if(!confirm('Delete all withdrawn items permanently? This cannot be undone.')) return;
+  getWithdrawnItems().forEach(i=>{
+    withdrawn.delete(i.id);
+    customItems=customItems.filter(c=>c.id!==i.id);
+    delete imgs[i.id]; delete descs[i.id]; delete bestSellers[i.id]; delete avail[i.id];
+  });
+  renderWithdrawn();
+  updateStats();
+  showToast('🗑 Withdrawn items cleared – tap Save to confirm');
+}
+
+function resetAll() {
+  if(!confirm('This will delete ALL custom items, photos, descriptions and settings. Are you sure?')) return;
+  if(!confirm('FINAL WARNING: This cannot be undone. Tap OK to reset.')) return;
+  [K_AVAIL,K_IMG,K_BS,K_DESC,K_ITEMS,K_WD].forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+function openMenuUrl() {
+  const url=document.getElementById('menuUrl').value.trim();
+  if(url) window.open(url,'_blank'); else alert('Enter the menu URL first.');
+}
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// Close modal on background click
+document.getElementById('modalBg').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+/* ══════════════════════════════════════
+   EXPOSE & START
+══════════════════════════════════════ */
+window.unlock=unlock; window.switchTab=switchTab;
+window.toggleAvail=toggleAvail; window.toggleBS=toggleBS;
+window.togglePanel=togglePanel; window.collapseAll=collapseAll;
+window.updateDesc=updateDesc; window.bulkSet=bulkSet;
+window.withdrawItem=withdrawItem; window.restoreItem=restoreItem;
+window.deleteItem=deleteItem; window.saveAll=saveAll;
+window.pickImg=pickImg; window.removeImg=removeImg;
+window.openAddModal=openAddModal; window.openEditModal=openEditModal;
+window.closeModal=closeModal; window.saveModal=saveModal;
+window.openMenuUrl=openMenuUrl; window.clearWithdrawn=clearWithdrawn;
+window.resetAll=resetAll;
 
 init();
 </script>
