@@ -207,8 +207,8 @@ input:checked + .slider::before { transform:translateX(17px); }
   <div class="lock-icon">☕🔒</div>
   <div class="lock-title">Classic Cups Admin</div>
   <div class="lock-sub">Staff Access Only</div>
-  <input class="lock-inp" type="password" id="pwInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlock()">
-  <button class="lock-btn" onclick="unlock()">Unlock</button>
+  <input class="lock-inp" type="password" id="pwInput" placeholder="Enter password">
+  <button class="lock-btn" id="unlockBtn">Unlock</button>
   <div class="lock-err" id="lockErr">Incorrect password. Try again.</div>
 </div>
 
@@ -249,7 +249,7 @@ input:checked + .slider::before { transform:translateX(17px); }
 <!-- ═══ ACTIVE MENU TAB ═══ -->
 <div id="pane-menu">
   <div class="controls">
-    <input class="search-box" id="searchInput" type="text" placeholder="Search items…" oninput="renderActive()">
+    <input class="search-box" id="searchInput" type="text" placeholder="Search items…">
     <div class="bulk-row">
       <button class="bulk-btn" onclick="bulkSet(true)">✅ All Available</button>
       <button class="bulk-btn" onclick="bulkSet(false)">❌ All Unavailable</button>
@@ -364,10 +364,7 @@ input:checked + .slider::before { transform:translateX(17px); }
 <input type="file" class="hidden-file" id="fileInput" accept="image/*">
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
+<script>
 /* ══════════════════════════════════════
    STORAGE KEYS
 ══════════════════════════════════════ */
@@ -505,7 +502,7 @@ let pendingImgId = null;
 let editingId    = null; // null = adding new
 
 /* ══════════════════════════════════════
-   FIREBASE
+   FIREBASE (compat SDK)
 ══════════════════════════════════════ */
 const FB_CONFIG = {
   apiKey:            "AIzaSyCwWeCwMz4XCIbKoaJ5QswyNoil7hw0Rjs",
@@ -516,13 +513,12 @@ const FB_CONFIG = {
   appId:             "1:750580458150:web:87720a2e99a06a04598a67"
 };
 
-const _app = initializeApp(FB_CONFIG);
-const db   = getFirestore(_app);
+let db = null;
 
 async function initFirebase() {
   try {
-    const snap = await getDoc(doc(db, 'menu', 'data'));
-    if (snap.exists()) {
+    const snap = await db.collection('menu').doc('data').get();
+    if (snap.exists) {
       const d = snap.data();
       avail       = d.avail       || {};
       bestSellers = d.bestSellers || {};
@@ -541,6 +537,10 @@ async function initFirebase() {
    INIT
 ══════════════════════════════════════ */
 async function init() {
+  // Initialise Firebase here (firebase is guaranteed loaded by this point)
+  firebase.initializeApp(FB_CONFIG);
+  db = firebase.firestore();
+
   // Load images and URL from localStorage (device only)
   try { const v=localStorage.getItem(K_IMG); if(v) imgs=JSON.parse(v); }catch(e){}
   try { const u=localStorage.getItem(K_URL); if(u) document.getElementById('menuUrl').value=u; }catch(e){}
@@ -881,7 +881,7 @@ async function saveAll() {
   // Save to Firebase — syncs instantly to all devices and menu page
   if (db) {
     try {
-      await setDoc(doc(db, 'menu', 'data'), payload);
+      await db.collection('menu').doc('data').set(payload);
       showToast('✅ Saved & synced to all devices!');
     } catch(e) {
       console.error('Firebase save error:', e);
@@ -969,7 +969,7 @@ async function resetAll() {
   if(!confirm('FINAL WARNING: This cannot be undone. Tap OK to reset.')) return;
   [K_AVAIL,K_IMG,K_BS,K_DESC,K_ITEMS,K_WD].forEach(k=>localStorage.removeItem(k));
   if (db) {
-    try { await setDoc(doc(db,'menu','data'), { avail:{}, bestSellers:{}, descs:{}, customItems:[], withdrawn:[], updatedAt: new Date().toISOString() }); } catch(e){}
+    try { await db.collection('menu').doc('data').set({ avail:{}, bestSellers:{}, descs:{}, customItems:[], withdrawn:[], updatedAt: new Date().toISOString() }); } catch(e){}
   }
   location.reload();
 }
@@ -1096,7 +1096,21 @@ window.openMenuUrl=openMenuUrl; window.clearWithdrawn=clearWithdrawn;
 window.resetAll=resetAll; window.renderGHList=renderGHList;
 window.copyFilename=copyFilename; window.openGHRepo=openGHRepo;
 
-init();
+// ── Attach static HTML button listeners (module scope fix) ──
+document.getElementById('unlockBtn').addEventListener('click', unlock);
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
+document.querySelector('.save-btn').addEventListener('click', saveAll);
+document.getElementById('tab-menu').addEventListener('click', ()=>switchTab('menu'));
+document.getElementById('tab-withdrawn').addEventListener('click', ()=>switchTab('withdrawn'));
+document.getElementById('tab-settings').addEventListener('click', ()=>switchTab('settings'));
+document.getElementById('searchInput').addEventListener('input', renderActive);
+document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target===document.getElementById('modalBg')) closeModal(); });
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onload="
+  var s = document.createElement('script');
+  s.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js';
+  s.onload = function() { init(); };
+  document.body.appendChild(s);
+"></script>
 </body>
 </html>
