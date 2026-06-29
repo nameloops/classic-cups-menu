@@ -365,6 +365,9 @@ input:checked + .slider::before { transform:translateX(17px); }
 <div class="toast" id="toast"></div>
 
 <script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
 /* ══════════════════════════════════════
    STORAGE KEYS
 ══════════════════════════════════════ */
@@ -513,19 +516,10 @@ const FB_CONFIG = {
   appId:             "1:750580458150:web:87720a2e99a06a04598a67"
 };
 
-let db = null;
-let _setDoc, _doc;
+const _app = initializeApp(FB_CONFIG);
+const db   = getFirestore(_app);
 
 async function initFirebase() {
-  const { initializeApp }  = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const { getFirestore, doc, getDoc, setDoc, onSnapshot }
-                            = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const app = initializeApp(FB_CONFIG);
-  db = getFirestore(app);
-  _setDoc = setDoc;
-  _doc    = doc;
-
-  // Load from Firebase
   try {
     const snap = await getDoc(doc(db, 'menu', 'data'));
     if (snap.exists()) {
@@ -536,11 +530,23 @@ async function initFirebase() {
       customItems = d.customItems || [];
       withdrawn   = new Set(d.withdrawn || []);
     }
-  } catch(e) { console.error('Firebase load error:', e); }
+    showToast('✅ Loaded from Firebase');
+  } catch(e) {
+    console.error('Firebase load error:', e);
+    showToast('⚠️ Could not load from Firebase');
+  }
+}
 
-  // Also load localStorage for imgs and URL (images stay local)
-  try { const v=localStorage.getItem(K_IMG);   if(v) imgs=JSON.parse(v);  }catch(e){}
-  try { const u=localStorage.getItem(K_URL);   if(u) document.getElementById('menuUrl').value=u; }catch(e){}
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+async function init() {
+  // Load images and URL from localStorage (device only)
+  try { const v=localStorage.getItem(K_IMG); if(v) imgs=JSON.parse(v); }catch(e){}
+  try { const u=localStorage.getItem(K_URL); if(u) document.getElementById('menuUrl').value=u; }catch(e){}
+
+  // Load menu data from Firebase
+  await initFirebase();
 
   // Seed default best sellers
   DEFAULT_MENU.forEach(i=>{ if(i.defaultBS && bestSellers[i.id]===undefined) bestSellers[i.id]=true; });
@@ -548,27 +554,6 @@ async function initFirebase() {
   renderActive();
   renderWithdrawn();
   updateStats();
-  showToast('✅ Loaded from Firebase');
-}
-
-/* ══════════════════════════════════════
-   INIT (called at bottom)
-══════════════════════════════════════ */
-function init() {
-  initFirebase().catch(e => {
-    console.error('Firebase init error:', e);
-    showToast('⚠️ Offline – changes saved locally only');
-    // Fallback to localStorage
-    try { const v=localStorage.getItem(K_AVAIL); if(v) avail=JSON.parse(v); }catch(e){}
-    try { const v=localStorage.getItem(K_IMG);   if(v) imgs=JSON.parse(v);  }catch(e){}
-    try { const v=localStorage.getItem(K_BS);    if(v) bestSellers=JSON.parse(v); }catch(e){}
-    try { const v=localStorage.getItem(K_DESC);  if(v) descs=JSON.parse(v); }catch(e){}
-    try { const v=localStorage.getItem(K_ITEMS); if(v) customItems=JSON.parse(v); }catch(e){}
-    try { const v=localStorage.getItem(K_WD);    if(v) withdrawn=new Set(JSON.parse(v)); }catch(e){}
-    try { const u=localStorage.getItem(K_URL);   if(u) document.getElementById('menuUrl').value=u; }catch(e){}
-    DEFAULT_MENU.forEach(i=>{ if(i.defaultBS && bestSellers[i.id]===undefined) bestSellers[i.id]=true; });
-    renderActive(); renderWithdrawn(); updateStats();
-  });
 }
 
 /* ══════════════════════════════════════
@@ -894,9 +879,9 @@ async function saveAll() {
   };
 
   // Save to Firebase — syncs instantly to all devices and menu page
-  if (db && _setDoc && _doc) {
+  if (db) {
     try {
-      await _setDoc(_doc(db, 'menu', 'data'), payload);
+      await setDoc(doc(db, 'menu', 'data'), payload);
       showToast('✅ Saved & synced to all devices!');
     } catch(e) {
       console.error('Firebase save error:', e);
@@ -983,8 +968,8 @@ async function resetAll() {
   if(!confirm('This will delete ALL custom items, photos, descriptions and settings. Are you sure?')) return;
   if(!confirm('FINAL WARNING: This cannot be undone. Tap OK to reset.')) return;
   [K_AVAIL,K_IMG,K_BS,K_DESC,K_ITEMS,K_WD].forEach(k=>localStorage.removeItem(k));
-  if (db && _setDoc && _doc) {
-    try { await _setDoc(_doc(db,'menu','data'), { avail:{}, bestSellers:{}, descs:{}, customItems:[], withdrawn:[], updatedAt: new Date().toISOString() }); } catch(e){}
+  if (db) {
+    try { await setDoc(doc(db,'menu','data'), { avail:{}, bestSellers:{}, descs:{}, customItems:[], withdrawn:[], updatedAt: new Date().toISOString() }); } catch(e){}
   }
   location.reload();
 }

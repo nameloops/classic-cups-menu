@@ -108,6 +108,8 @@
 </div>
 
 <script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const AVAIL_KEY = 'classicCupsAvailability';
 const IMG_KEY   = 'classicCupsImages';
 const BS_KEY    = 'classicCupsBestSellers';
@@ -346,50 +348,34 @@ let descs       = {};
 let customItems = [];
 let withdrawn   = new Set();
 let activeCat   = 'all';
-let db          = null;
 
-async function initFirebase() {
-  const { initializeApp }       = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const { getFirestore, doc, getDoc, onSnapshot, collection }
-                                 = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const app = initializeApp(FB_CONFIG);
-  db = getFirestore(app);
+// ── FIREBASE INIT ──
+const app = initializeApp(FB_CONFIG);
+const db  = getFirestore(app);
 
-  // Show loading indicator
-  document.getElementById('menuBody').innerHTML = '<div style="text-align:center;padding:3rem;color:#8B6914;font-size:.9rem;">Loading menu…</div>';
+// Seed default best sellers
+MENU.forEach(item => { if (item.defaultBS) bestSellers[item.id] = true; });
 
-  // Seed default best sellers
-  MENU.forEach(item => {
-    if (item.defaultBS) bestSellers[item.id] = true;
-  });
+// Show loading
+document.getElementById('menuBody').innerHTML = '<div style="text-align:center;padding:3rem;color:#8B6914;font-size:.9rem;">Loading menu…</div>';
 
-  // Listen to Firestore in real time — menu updates instantly when admin saves
-  const menuRef = doc(db, 'menu', 'data');
-  onSnapshot(menuRef, (snap) => {
-    if (snap.exists()) {
-      const d = snap.data();
-      avail       = d.avail       || {};
-      bestSellers = d.bestSellers || {};
-      descs       = d.descs       || {};
-      customItems = d.customItems || [];
-      withdrawn   = new Set(d.withdrawn || []);
-    }
-    // Always seed defaults then render — even if doc doesn't exist yet
+// Listen in real time
+const menuRef = doc(db, 'menu', 'data');
+onSnapshot(menuRef, (snap) => {
+  if (snap.exists()) {
+    const d = snap.data();
+    avail       = d.avail       || {};
+    bestSellers = d.bestSellers || {};
+    descs       = d.descs       || {};
+    customItems = d.customItems || [];
+    withdrawn   = new Set(d.withdrawn || []);
     MENU.forEach(item => {
       if (item.defaultBS && bestSellers[item.id] === undefined) bestSellers[item.id] = true;
     });
-    render();
-  }, (err) => {
-    console.error('Firebase error:', err);
-    // Fallback: seed defaults and render full menu
-    MENU.forEach(item => { if (item.defaultBS) bestSellers[item.id] = true; });
-    render();
-  });
-}
-
-// Catch initFirebase errors and render full menu as fallback
-initFirebase().catch(err => {
-  console.error('Firebase init failed:', err);
+  }
+  render();
+}, (err) => {
+  console.error('Firebase error:', err);
   MENU.forEach(item => { if (item.defaultBS) bestSellers[item.id] = true; });
   render();
 });
