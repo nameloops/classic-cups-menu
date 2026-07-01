@@ -230,15 +230,6 @@ input:checked + .slider::before { transform:translateX(17px); }
   <div class="stat"><div class="stat-n t" id="nTotal">—</div><div class="stat-l">Total</div></div>
 </div>
 
-<!-- GITHUB REMINDER NOTICE -->
-<div class="gh-notice">
-  <div class="gh-notice-icon">📌</div>
-  <div class="gh-notice-text">
-    <strong>To update item photos, upload to GitHub</strong>
-    Photos added here are saved on this device only. To show updated photos to all customers, upload new images to the <code style="background:#DBEAFE;padding:1px 4px;border-radius:3px;font-size:.72rem;">images/</code> folder in your GitHub repository. Go to <strong>⚙️ Settings → Upload to GitHub</strong> for step-by-step instructions.
-  </div>
-</div>
-
 <!-- TABS -->
 <div class="tabs">
   <button class="tab active" id="tab-menu"      onclick="switchTab('menu')">📋 Active Menu</button>
@@ -286,16 +277,8 @@ input:checked + .slider::before { transform:translateX(17px); }
     <!-- ── UPLOAD TO GITHUB SECTION ── -->
     <div style="font-size:.8rem;font-weight:800;color:var(--brown);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📁 Upload to GitHub</div>
 
-    <!-- Step by step guide -->
-    <div class="gh-steps">
-      <div class="gh-steps-title">🟢 How to update item photos (visible to all customers)</div>
-      <div class="gh-step"><div class="gh-step-num">1</div><div>Take or save the new photo on your phone/computer</div></div>
-      <div class="gh-step"><div class="gh-step-num">2</div><div>Rename the file to the exact filename shown below (e.g. <code style="background:#D1FAE5;padding:1px 4px;border-radius:3px;">masala_tea.jpg</code>)</div></div>
-      <div class="gh-step"><div class="gh-step-num">3</div><div>Go to your GitHub repository → click the <strong>images/</strong> folder</div></div>
-      <div class="gh-step"><div class="gh-step-num">4</div><div>Click <strong>"Add file" → "Upload files"</strong> → drag your renamed photo → click <strong>"Commit changes"</strong></div></div>
-      <div class="gh-step"><div class="gh-step-num">5</div><div>Done! The menu updates instantly for all customers 🎉</div></div>
-      <a class="gh-link-btn" id="ghRepoLink" href="#" target="_blank" onclick="openGHRepo()">🔗 Open GitHub Repository</a>
-    </div>
+    <a class="gh-link-btn" id="ghRepoLink" href="#" target="_blank" onclick="openGHRepo()">🔗 Open GitHub Repository</a>
+
 
     <!-- Image filename reference -->
     <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Item → Filename Reference</div>
