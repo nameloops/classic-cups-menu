@@ -159,6 +159,15 @@ input:checked + .slider::before { transform:translateX(17px); }
 .modal-save-btn { flex:1; background:var(--brown); color:#fff; border:none; padding:12px; border-radius:10px; font-size:.88rem; font-weight:700; cursor:pointer; }
 .modal-cancel-btn { background:#fff; color:var(--muted); border:1.5px solid var(--cb); padding:12px 18px; border-radius:10px; font-size:.88rem; font-weight:600; cursor:pointer; }
 
+/* ── CROP MODAL ── */
+.crop-hint { font-size:.72rem; color:var(--muted); margin-bottom:12px; text-align:center; }
+.crop-wrap { display:flex; justify-content:center; padding:4px 0 14px; }
+.crop-box { width:72px; height:72px; border-radius:10px; overflow:hidden; position:relative; border:2px solid var(--amber); box-shadow:0 0 0 3000px rgba(0,0,0,.45); background:#111; touch-action:none; cursor:grab; }
+.crop-box:active { cursor:grabbing; }
+.crop-box img { position:absolute; top:0; left:0; max-width:none; max-height:none; user-select:none; pointer-events:none; }
+.crop-zoom-row { display:flex; align-items:center; gap:10px; padding:0 4px 4px; font-size:.9rem; }
+.crop-zoom-row input[type=range] { flex:1; accent-color:var(--amber); }
+
 /* ── EMPTY STATE ── */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 .empty-state .e-icon { font-size:2.5rem; margin-bottom:.8rem; }
@@ -189,7 +198,10 @@ input:checked + .slider::before { transform:translateX(17px); }
     <h1>☕ Classic Cups – Admin</h1>
     <p>Manage menu · availability · photos · best sellers</p>
   </div>
-  <button class="save-btn" onclick="saveAll()">💾 Save</button>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="save-btn" onclick="saveAll()">💾 Save</button>
+    <button class="save-btn" style="background:#fff;color:var(--brown);border:1.5px solid var(--cb);" onclick="logout()">🔒 Log out</button>
+  </div>
 </div>
 
 <!-- STATS -->
@@ -302,6 +314,30 @@ input:checked + .slider::before { transform:translateX(17px); }
 </div>
 
 <input type="file" class="hidden-file" id="fileInput" accept="image/*">
+
+<!-- ═══ CROP MODAL ═══ -->
+<div class="modal-bg hidden" id="cropModalBg">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-title">
+      <span>Adjust Photo</span>
+    </div>
+    <div class="crop-hint">Drag the photo to reposition it inside the frame</div>
+    <div class="crop-wrap">
+      <div class="crop-box" id="cropBox">
+        <img id="cropImg" src="" draggable="false" alt="">
+      </div>
+    </div>
+    <div class="crop-zoom-row">
+      <span>🔍</span>
+      <input type="range" id="cropZoom" min="100" max="300" value="100" oninput="updateCropZoom()">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel-btn" onclick="cancelCrop()">Cancel</button>
+      <button class="modal-save-btn"   onclick="confirmCrop()">✅ Use Photo</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -317,22 +353,37 @@ const K_ITEMS = 'classicCupsCustomItems';   // added/edited items
 const K_WD    = 'classicCupsWithdrawn';     // withdrawn item ids
 
 /* ══════════════════════════════════════
-   PASSWORD
+   PASSWORD (Firebase Authentication)
+   The only secret here is the password itself, which lives in
+   Firebase's Auth backend — never in this file. ADMIN_EMAIL is just
+   an account identifier, not a secret.
 ══════════════════════════════════════ */
+const ADMIN_EMAIL = 'admin@classiccups.app';
+
 function unlock() {
-  if (document.getElementById('pwInput').value === 'ccadmin2026!') {
-    document.getElementById('lockScreen').classList.add('hidden');
-    sessionStorage.setItem('ccUnlocked','1');
-  } else {
-    const e = document.getElementById('lockErr');
-    e.classList.add('show');
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-    setTimeout(()=>e.classList.remove('show'),3000);
-  }
+  const pwInput = document.getElementById('pwInput');
+  const btn = document.getElementById('unlockBtn');
+  const pw = pwInput.value;
+  if (!pw) return;
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  auth.signInWithEmailAndPassword(ADMIN_EMAIL, pw)
+    .catch(() => {
+      const e = document.getElementById('lockErr');
+      e.classList.add('show');
+      pwInput.value = '';
+      pwInput.focus();
+      setTimeout(() => e.classList.remove('show'), 3000);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
+    });
 }
-if (sessionStorage.getItem('ccUnlocked')==='1')
-  document.getElementById('lockScreen').classList.add('hidden');
+
+function logout() {
+  auth.signOut();
+}
 
 /* ══════════════════════════════════════
    DEFAULT MENU
@@ -453,7 +504,8 @@ const FB_CONFIG = {
   appId:             "1:750580458150:web:87720a2e99a06a04598a67"
 };
 
-let db = null;
+let db   = null;
+let auth = null;
 
 async function initFirebase() {
   try {
@@ -476,11 +528,7 @@ async function initFirebase() {
 /* ══════════════════════════════════════
    INIT
 ══════════════════════════════════════ */
-async function init() {
-  // Initialise Firebase here (firebase is guaranteed loaded by this point)
-  firebase.initializeApp(FB_CONFIG);
-  db = firebase.firestore();
-
+async function startApp() {
   // Load images and URL from localStorage (device only)
   try { const v=localStorage.getItem(K_IMG); if(v) imgs=JSON.parse(v); }catch(e){}
   try { const u=localStorage.getItem(K_URL); if(u) document.getElementById('menuUrl').value=u; }catch(e){}
@@ -494,6 +542,24 @@ async function init() {
   renderActive();
   renderWithdrawn();
   updateStats();
+}
+
+function init() {
+  // Initialise Firebase here (firebase is guaranteed loaded by this point)
+  firebase.initializeApp(FB_CONFIG);
+  db   = firebase.firestore();
+  auth = firebase.auth();
+
+  // Gate the whole app behind sign-in. Firebase checks the password
+  // against its own backend — nothing secret is stored in this file.
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('lockScreen').classList.add('hidden');
+      startApp();
+    } else {
+      document.getElementById('lockScreen').classList.remove('hidden');
+    }
+  });
 }
 
 /* ══════════════════════════════════════
@@ -874,28 +940,114 @@ document.getElementById('fileInput').addEventListener('change',function(e){
   const file=e.target.files[0];
   if(!file||!pendingImgId) return;
   const reader=new FileReader();
-  reader.onload=function(ev){
-    const img=new Image();
-    img.onload=function(){
-      const canvas=document.createElement('canvas');
-      const MAX=400;
-      let w=img.width,h=img.height;
-      if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const dataUrl = canvas.toDataURL('image/jpeg',.75);
-      imgs[pendingImgId] = dataUrl;
-      // Also embed into customItem so it saves to Firebase
-      const ci = customItems.find(c=>c.id===pendingImgId);
-      if(ci) ci.img = dataUrl;
-      openPanels.add(pendingImgId);
-      renderActive();
-      showToast('📷 Photo added – tap Save to confirm');
-    };
-    img.src=ev.target.result;
-  };
+  reader.onload=function(ev){ openCropModal(ev.target.result); };
   reader.readAsDataURL(file);
 });
+
+/* ── CROP MODAL ── */
+const CROP_BOX = 72;          // fixed crop frame size (px)
+const CROP_OUTPUT = 216;      // exported image resolution (3x for sharpness)
+let cropState = { scale:1, minScale:1, x:0, y:0, natW:0, natH:0, dragging:false, startX:0, startY:0 };
+
+function openCropModal(dataUrl) {
+  const img = document.getElementById('cropImg');
+  img.onload = function(){
+    cropState.natW = img.naturalWidth;
+    cropState.natH = img.naturalHeight;
+    const coverScale = Math.max(CROP_BOX/cropState.natW, CROP_BOX/cropState.natH);
+    cropState.minScale = coverScale;
+    cropState.scale = coverScale;
+    cropState.x = (CROP_BOX - cropState.natW*coverScale)/2;
+    cropState.y = (CROP_BOX - cropState.natH*coverScale)/2;
+    document.getElementById('cropZoom').value = 100;
+    applyCropTransform();
+  };
+  img.src = dataUrl;
+  document.getElementById('cropModalBg').classList.remove('hidden');
+}
+
+function applyCropTransform() {
+  const img = document.getElementById('cropImg');
+  img.style.width  = (cropState.natW*cropState.scale)+'px';
+  img.style.height = (cropState.natH*cropState.scale)+'px';
+  img.style.left = cropState.x+'px';
+  img.style.top  = cropState.y+'px';
+}
+
+function clampCropPos(nx, ny) {
+  const w = cropState.natW*cropState.scale;
+  const h = cropState.natH*cropState.scale;
+  cropState.x = Math.min(0, Math.max(CROP_BOX - w, nx));
+  cropState.y = Math.min(0, Math.max(CROP_BOX - h, ny));
+  applyCropTransform();
+}
+
+function updateCropZoom() {
+  const pct = parseFloat(document.getElementById('cropZoom').value);
+  const newScale = cropState.minScale * (pct/100);
+  // keep the point currently at the box center fixed while zooming
+  const cx = (CROP_BOX/2 - cropState.x)/cropState.scale;
+  const cy = (CROP_BOX/2 - cropState.y)/cropState.scale;
+  cropState.scale = newScale;
+  clampCropPos(CROP_BOX/2 - cx*newScale, CROP_BOX/2 - cy*newScale);
+}
+
+function cropPointerDown(e) {
+  cropState.dragging = true;
+  const p = e.touches ? e.touches[0] : e;
+  cropState.startX = p.clientX - cropState.x;
+  cropState.startY = p.clientY - cropState.y;
+  if (e.pointerId !== undefined) { try { e.target.setPointerCapture(e.pointerId); } catch(err){} }
+  e.preventDefault();
+}
+function cropPointerMove(e) {
+  if (!cropState.dragging) return;
+  const p = e.touches ? e.touches[0] : e;
+  clampCropPos(p.clientX - cropState.startX, p.clientY - cropState.startY);
+  e.preventDefault();
+}
+function cropPointerUp() { cropState.dragging = false; }
+
+function confirmCrop() {
+  const img = document.getElementById('cropImg');
+  const canvas = document.createElement('canvas');
+  canvas.width = CROP_OUTPUT; canvas.height = CROP_OUTPUT;
+  const ctx = canvas.getContext('2d');
+  const sx = -cropState.x/cropState.scale;
+  const sy = -cropState.y/cropState.scale;
+  const sSize = CROP_BOX/cropState.scale;
+  ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, CROP_OUTPUT, CROP_OUTPUT);
+  const dataUrl = canvas.toDataURL('image/jpeg', .85);
+  imgs[pendingImgId] = dataUrl;
+  const ci = customItems.find(c=>c.id===pendingImgId);
+  if (ci) ci.img = dataUrl;
+  openPanels.add(pendingImgId);
+  closeCropModal();
+  renderActive();
+  showToast('📷 Photo added – tap Save to confirm');
+}
+
+function cancelCrop() {
+  closeCropModal();
+  document.getElementById('fileInput').value = '';
+}
+
+function closeCropModal() {
+  document.getElementById('cropModalBg').classList.add('hidden');
+  document.getElementById('cropImg').src = '';
+  cropState.dragging = false;
+}
+
+(function initCropDrag(){
+  const box = document.getElementById('cropBox');
+  box.addEventListener('pointerdown', cropPointerDown);
+  box.addEventListener('pointermove', cropPointerMove);
+  box.addEventListener('pointerup', cropPointerUp);
+  box.addEventListener('pointercancel', cropPointerUp);
+  box.addEventListener('touchstart', cropPointerDown, {passive:false});
+  box.addEventListener('touchmove', cropPointerMove, {passive:false});
+  box.addEventListener('touchend', cropPointerUp);
+})();
 
 /* ══════════════════════════════════════
    SETTINGS ACTIONS
@@ -946,13 +1098,14 @@ document.getElementById('modalBg').addEventListener('click',function(e){
 /* ══════════════════════════════════════
    EXPOSE & START
 ══════════════════════════════════════ */
-window.unlock=unlock; window.switchTab=switchTab;
+window.unlock=unlock; window.logout=logout; window.switchTab=switchTab;
 window.toggleAvail=toggleAvail; window.toggleBS=toggleBS;
 window.togglePanel=togglePanel; window.collapseAll=collapseAll;
 window.updateDesc=updateDesc; window.bulkSet=bulkSet;
 window.withdrawItem=withdrawItem; window.restoreItem=restoreItem;
 window.deleteItem=deleteItem; window.saveAll=saveAll;
 window.pickImg=pickImg; window.removeImg=removeImg;
+window.confirmCrop=confirmCrop; window.cancelCrop=cancelCrop; window.updateCropZoom=updateCropZoom;
 window.openAddModal=openAddModal; window.openEditModal=openEditModal;
 window.closeModal=closeModal; window.saveModal=saveModal;
 window.openMenuUrl=openMenuUrl; window.clearWithdrawn=clearWithdrawn;
@@ -971,7 +1124,12 @@ document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target===
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onload="
   var s = document.createElement('script');
   s.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js';
-  s.onload = function() { init(); };
+  s.onload = function() {
+    var a = document.createElement('script');
+    a.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+    a.onload = function() { init(); };
+    document.body.appendChild(a);
+  };
   document.body.appendChild(s);
 "></script>
 </body>
