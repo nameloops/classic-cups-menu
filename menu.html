@@ -399,9 +399,10 @@ function render() {
       const isAvail  = avail[item.id] !== false;
       const isBs     = !!bestSellers[item.id];
       const desc     = descs[item.id] || item.desc || '';
-      const githubImg = GITHUB_IMAGES[item.id];
-      const thumb = githubImg
-        ? '<div class="item-thumb"><img src="' + githubImg + '" alt="' + item.name + '" onerror="this.parentElement.innerHTML=\'' + (item.emoji||'🍽️') + '\'"></div>'
+      // Priority: 1) custom item uploaded image (from Firebase), 2) GitHub images/, 3) custom SVG, 4) emoji
+      const imgSrc   = item.img || GITHUB_IMAGES[item.id] || null;
+      const thumb = imgSrc
+        ? '<div class="item-thumb"><img src="' + imgSrc + '" alt="' + item.name + '" onerror="this.parentElement.innerHTML=\'' + (item.emoji||'🍽️') + '\'"></div>'
         : SAMOSA_IDS.has(item.id)
           ? '<div class="item-thumb">' + SAMOSA_SVG + '</div>'
           : PATHIRI_IDS.has(item.id)

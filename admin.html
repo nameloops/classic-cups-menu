@@ -820,18 +820,21 @@ function saveModal() {
   if(!cat)          { alert('Please select a category.');   return; }
 
   if(editingId) {
-    // Update existing
+    // Update existing — embed img into customItem so Firebase stores it
     const existing = customItems.findIndex(c=>c.id===editingId);
     const updated = {id:editingId, name, price, cat, emoji};
+    if(imgs[editingId]) updated.img = imgs[editingId];
     if(existing>=0) customItems[existing] = updated;
     else customItems.push(updated);
     bestSellers[editingId] = isBs;
     if(desc) descs[editingId]=desc; else delete descs[editingId];
     showToast('✏️ Item updated – tap Save to confirm');
   } else {
-    // Add new
+    // Add new — embed img into customItem so Firebase stores it
     const newId = 'custom_'+Date.now();
-    customItems.push({id:newId, name, price, cat, emoji});
+    const newItem = {id:newId, name, price, cat, emoji};
+    if(imgs[newId]) newItem.img = imgs[newId];
+    customItems.push(newItem);
     bestSellers[newId] = isBs;
     if(desc) descs[newId]=desc;
     avail[newId] = true;
@@ -922,6 +925,8 @@ function pickImg(id) {
 
 function removeImg(id) {
   delete imgs[id];
+  const ci = customItems.find(c=>c.id===id);
+  if(ci) delete ci.img;
   renderActive();
   showToast('Photo removed – tap Save to confirm');
 }
@@ -939,7 +944,11 @@ document.getElementById('fileInput').addEventListener('change',function(e){
       if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
       canvas.width=w; canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
-      imgs[pendingImgId]=canvas.toDataURL('image/jpeg',.75);
+      const dataUrl = canvas.toDataURL('image/jpeg',.75);
+      imgs[pendingImgId] = dataUrl;
+      // Also embed into customItem so it saves to Firebase
+      const ci = customItems.find(c=>c.id===pendingImgId);
+      if(ci) ci.img = dataUrl;
       openPanels.add(pendingImgId);
       renderActive();
       showToast('📷 Photo added – tap Save to confirm');
