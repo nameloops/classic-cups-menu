@@ -88,6 +88,7 @@
 <div class="filter-wrap">
   <div class="filter-bar" id="filterBar">
     <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('bestsellers',this)">⭐ Best Sellers</button>
     <button class="filter-btn" onclick="setFilter('snacks',this)">Snacks</button>
     <button class="filter-btn" onclick="setFilter('plated',this)">Plated Dishes</button>
     <button class="filter-btn" onclick="setFilter('fries',this)">Loaded Fries</button>
@@ -380,10 +381,55 @@ function setFilter(cat, btn) {
   render();
 }
 
+function renderItemCard(item) {
+  const isAvail  = avail[item.id] !== false;
+  const isBs     = !!bestSellers[item.id];
+  const desc     = descs[item.id] || item.desc || '';
+  // Priority: 1) custom item uploaded image (from Firebase), 2) GitHub images/, 3) custom SVG, 4) emoji
+  const imgSrc   = item.img || GITHUB_IMAGES[item.id] || null;
+  const thumb = imgSrc
+    ? '<div class="item-thumb"><img src="' + imgSrc + '" alt="' + item.name + '" onerror="this.parentElement.innerHTML=\'' + (item.emoji||'🍽️') + '\'"></div>'
+    : SAMOSA_IDS.has(item.id)
+      ? '<div class="item-thumb">' + SAMOSA_SVG + '</div>'
+      : PATHIRI_IDS.has(item.id)
+        ? '<div class="item-thumb" style="background:#FFFBEB;">' + PATHIRI_SVG + '</div>'
+        : NUGGETS_IDS.has(item.id)
+          ? '<div class="item-thumb" style="background:#FFFBEB;">' + NUGGETS_SVG + '</div>'
+          : '<div class="item-thumb">' + (item.emoji || '🍽️') + '</div>';
+  const ribbon = (isBs && isAvail) ? '<div class="bs-ribbon">⭐ Best Seller</div>' : '';
+  return '<div class="item-card' + (isBs && isAvail ? ' bestseller' : '') + (!isAvail ? ' unavailable' : '') + '">'
+       + ribbon + thumb
+       + '<div class="item-body">'
+       + '<div class="item-name">' + item.name + '</div>'
+       + (desc ? '<div class="item-desc">' + desc + '</div>' : '')
+       + '</div>'
+       + '<div class="item-price">₹' + item.price + '</div>'
+       + '</div>';
+}
+
+// Bestsellers first (stable sort keeps original relative order otherwise)
+function bsFirst(items) {
+  return [...items].sort((a, b) => (bestSellers[b.id] ? 1 : 0) - (bestSellers[a.id] ? 1 : 0));
+}
+
 function render() {
   const fullMenu = getFullMenu();
-  const catKeys  = activeCat === 'all' ? Object.keys(CAT_LABELS) : [activeCat];
   let html = '';
+
+  if (activeCat === 'bestsellers') {
+    const bsItems     = fullMenu.filter(i => !!bestSellers[i.id]);
+    const available   = bsItems.filter(i => avail[i.id] !== false);
+    const unavailable = bsItems.filter(i => avail[i.id] === false);
+    const sorted = [...available, ...unavailable];
+    if (sorted.length) {
+      html += '<div class="section-label">⭐ Best Sellers</div>';
+      sorted.forEach(item => { html += renderItemCard(item); });
+    }
+    document.getElementById('menuBody').innerHTML = html || '<div style="text-align:center;padding:3rem;color:#8B6914;">No best sellers found</div>';
+    return;
+  }
+
+  const catKeys = activeCat === 'all' ? Object.keys(CAT_LABELS) : [activeCat];
 
   catKeys.forEach(catKey => {
     const label    = CAT_LABELS[catKey];
@@ -392,34 +438,10 @@ function render() {
 
     const available   = allItems.filter(i => avail[i.id] !== false);
     const unavailable = allItems.filter(i => avail[i.id] === false);
-    const sorted = [...available, ...unavailable];
+    const sorted = [...bsFirst(available), ...bsFirst(unavailable)];
 
     html += '<div class="section-label">' + label + '</div>';
-    sorted.forEach(item => {
-      const isAvail  = avail[item.id] !== false;
-      const isBs     = !!bestSellers[item.id];
-      const desc     = descs[item.id] || item.desc || '';
-      // Priority: 1) custom item uploaded image (from Firebase), 2) GitHub images/, 3) custom SVG, 4) emoji
-      const imgSrc   = item.img || GITHUB_IMAGES[item.id] || null;
-      const thumb = imgSrc
-        ? '<div class="item-thumb"><img src="' + imgSrc + '" alt="' + item.name + '" onerror="this.parentElement.innerHTML=\'' + (item.emoji||'🍽️') + '\'"></div>'
-        : SAMOSA_IDS.has(item.id)
-          ? '<div class="item-thumb">' + SAMOSA_SVG + '</div>'
-          : PATHIRI_IDS.has(item.id)
-            ? '<div class="item-thumb" style="background:#FFFBEB;">' + PATHIRI_SVG + '</div>'
-            : NUGGETS_IDS.has(item.id)
-              ? '<div class="item-thumb" style="background:#FFFBEB;">' + NUGGETS_SVG + '</div>'
-              : '<div class="item-thumb">' + (item.emoji || '🍽️') + '</div>';
-      const ribbon = (isBs && isAvail) ? '<div class="bs-ribbon">⭐ Best Seller</div>' : '';
-      html += '<div class="item-card' + (isBs && isAvail ? ' bestseller' : '') + (!isAvail ? ' unavailable' : '') + '">'
-            + ribbon + thumb
-            + '<div class="item-body">'
-            + '<div class="item-name">' + item.name + '</div>'
-            + (desc ? '<div class="item-desc">' + desc + '</div>' : '')
-            + '</div>'
-            + '<div class="item-price">₹' + item.price + '</div>'
-            + '</div>';
-    });
+    sorted.forEach(item => { html += renderItemCard(item); });
   });
   document.getElementById('menuBody').innerHTML = html || '<div style="text-align:center;padding:3rem;color:#8B6914;">No items found</div>';
 }
